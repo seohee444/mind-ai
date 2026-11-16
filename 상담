@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>청소년 AI 심리 상담 프로토타입</title>
+  <style>
+    body { font-family: 'Malgun Gothic', sans-serif; background: #f4f6f9; display: flex; justify-content: center; padding: 30px 15px; margin: 0; }
+    .container { width: 100%; max-width: 500px; background: white; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); overflow: hidden; display: flex; flex-direction: column; height: 80vh; }
+    .header { background: #3b82f6; color: white; padding: 18px; text-align: center; }
+    .header h2 { margin: 0; font-size: 18px; }
+    .header p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; }
+    .chat-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+    .msg { max-width: 80%; padding: 12px 15px; border-radius: 14px; font-size: 14px; line-height: 1.5; }
+    .bot { background: #eef2ff; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; }
+    .user { background: #3b82f6; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .tag { display: inline-block; font-size: 11px; font-weight: bold; padding: 2px 7px; border-radius: 6px; margin-bottom: 6px; background: #dbeafe; color: #1d4ed8; }
+    .danger { background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; }
+    .danger .tag { background: #ef4444; color: white; }
+    .input-area { display: flex; border-top: 1px solid #e2e8f0; padding: 10px; background: white; }
+    input { flex: 1; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-size: 14px; outline: none; }
+    button { margin-left: 8px; background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 0 18px; font-weight: bold; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>청소년 마음케어 AI 상담소</h2>
+      <p>검증된 상담 매뉴얼(RAG) 기반 안전 대화 시스템</p>
+    </div>
+    <div class="chat-box" id="chatBox">
+      <div class="msg bot">
+        <span class="tag">상담 안내</span><br>
+        안녕! 오늘 학교생활이나 친구, 가족 문제로 마음 쓰이는 일이 있니? 편하게 이야기해 줘.
+      </div>
+    </div>
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="고민을 입력하세요 (예: 시험 때문에 불안해)" onkeypress="if(event.key==='Enter') sendMessage()" />
+      <button onclick="sendMessage()">전송</button>
+    </div>
+  </div>
+
+  <script>
+    // 보고서에서 설계한 상담 매뉴얼 데이터 (RAG 지식 DB 역할)
+    const counselingManual = [
+      {
+        level: "Level 3 (긴급 위기)",
+        isDanger: true,
+        keywords: ["죽고", "사라지고", "자해", "끝내고", "살기 싫"],
+        category: "긴급 위기 대응 수칙",
+        response: "지금 마음이 정말 많이 힘들고 지쳐 있구나. 혼자서 이 무게를 다 견디려 하지 않아도 돼. 지금 바로 전문가의 도움을 받을 수 있도록 연결해 줄게.<br><br>📞 <b>청소년 상담전화: 국번없이 1388 (24시간 무료)</b><br>📞 <b>자살예방 상담전화: 109</b><br>혼자가 아니니까 꼭 연락해 줘."
+      },
+      {
+        level: "Level 1 (일반 고민)",
+        isDanger: false,
+        keywords: ["시험", "성적", "공부", "진로", "대학", "불안"],
+        category: "학업 및 진로 매뉴얼",
+        response: "시험이나 성적 때문에 압박감이 크구나. 열심히 하려는 마음이 크니까 그만큼 불안한 건 자연스러운 거야. 오늘 당장 모든 걸 다 하려 하기보다, 지금 할 수 있는 가장 작은 목표 하나만 정해서 30분만 집중해 보는 건 어떨까?"
+      },
+      {
+        level: "Level 2 (주의 관찰)",
+        isDanger: false,
+        keywords: ["친구", "따돌림", "단톡", "싸웠", "외톨이", "관계"],
+        category: "대인관계 갈등 매뉴얼",
+        response: "친구 관계 때문에 마음이 많이 상하고 혼란스러웠겠다. 네 잘못이 아닌데도 스스로를 탓하게 될 때가 많지. 감정이 조금 가라앉은 뒤에 네 솔직한 기분을 차분하게 전달하거나, 믿을 수 있는 선생님·상담실에 이야기해 보는 것도 큰 도움이 돼."
+      },
+      {
+        level: "Level 2 (주의 관찰)",
+        isDanger: false,
+        keywords: ["부모님", "엄마", "아빠", "집", "가족", "잔소리"],
+        category: "가족 갈등 매뉴얼",
+        response: "가족과 대화가 통하지 않고 계속 부딪히면 집에서도 편히 쉬지 못해 정말 답답하지. 당장 부모님의 생각을 바꾸려 하기보다, 네가 어떤 부분에서 서운하고 힘든지 차분히 글로 먼저 정리해 보는 건 어떨까?"
+      }
+    ];
+
+    function sendMessage() {
+      const input = document.getElementById("userInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendMessage(text, "user");
+      input.value = "";
+
+      // RAG 검색 단계: 입력 문장에서 매뉴얼 키워드 검색
+      let matched = counselingManual.find(item =>
+        item.keywords.some(keyword => text.includes(keyword))
+      );
+
+      setTimeout(() => {
+        if (matched) {
+          appendBotMessage(matched.category, matched.level, matched.response, matched.isDanger);
+        } else {
+          appendBotMessage(
+            "기본 공감 매뉴얼",
+            "Level 1 (일반 고민)",
+            "그런 일이 있었구나. 네가 지금 느끼는 감정이 어떤 건지 조금 더 자세히 들려줄 수 있니? 네 이야기를 끝까지 들어줄게.",
+            false
+          );
+        }
+      }, 400);
+    }
+
+    function appendMessage(text, sender) {
+      const chatBox = document.getElementById("chatBox");
+      const div = document.createElement("div");
+      div.className = `msg ${sender}`;
+      div.innerText = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function appendBotMessage(category, level, response, isDanger) {
+      const chatBox = document.getElementById("chatBox");
+      const div = document.createElement("div");
+      div.className = isDanger ? "msg bot danger" : "msg bot";
+      div.innerHTML = `<span class="tag">${category} · ${level}</span><br>${response}`;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+</body>
+</html>
