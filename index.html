@@ -3,119 +3,310 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>청소년 AI 심리 상담 프로토타입</title>
+  <title>마음친구 AI 상담소</title>
   <style>
-    body { font-family: 'Malgun Gothic', sans-serif; background: #f4f6f9; display: flex; justify-content: center; padding: 30px 15px; margin: 0; }
-    .container { width: 100%; max-width: 500px; background: white; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); overflow: hidden; display: flex; flex-direction: column; height: 80vh; }
-    .header { background: #3b82f6; color: white; padding: 18px; text-align: center; }
-    .header h2 { margin: 0; font-size: 18px; }
-    .header p { margin: 5px 0 0; font-size: 12px; opacity: 0.9; }
-    .chat-box { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-    .msg { max-width: 80%; padding: 12px 15px; border-radius: 14px; font-size: 14px; line-height: 1.5; }
-    .bot { background: #eef2ff; color: #1e293b; align-self: flex-start; border-bottom-left-radius: 2px; }
-    .user { background: #3b82f6; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-    .tag { display: inline-block; font-size: 11px; font-weight: bold; padding: 2px 7px; border-radius: 6px; margin-bottom: 6px; background: #dbeafe; color: #1d4ed8; }
-    .danger { background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; }
-    .danger .tag { background: #ef4444; color: white; }
-    .input-area { display: flex; border-top: 1px solid #e2e8f0; padding: 10px; background: white; }
-    input { flex: 1; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; font-size: 14px; outline: none; }
-    button { margin-left: 8px; background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 0 18px; font-weight: bold; cursor: pointer; }
+    * { box-sizing: border-box; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
+    body { background: #fdf6f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
+    .app-container { width: 100%; max-width: 440px; height: 85vh; max-height: 750px; background: #ffffff; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; display: flex; flex-direction: column; position: relative; }
+
+    /* 캐릭터 선택 화면 */
+    .select-screen { flex: 1; padding: 28px 20px; display: flex; flex-direction: column; justify-content: center; background: linear-gradient(180deg, #fff9f2 0%, #ffffff 100%); text-align: center; }
+    .select-screen h2 { margin: 0 0 8px; font-size: 22px; color: #333; }
+    .select-screen p { margin: 0 0 24px; font-size: 13.5px; color: #777; line-height: 1.5; }
+    .char-list { display: flex; flex-direction: column; gap: 12px; }
+    .char-card { display: flex; align-items: center; background: #fff; border: 2px solid #f1e8df; border-radius: 18px; padding: 14px 16px; cursor: pointer; transition: all 0.2s; text-align: left; }
+    .char-card:hover { border-color: #ff9f68; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(255, 159, 104, 0.15); }
+    .char-avatar { font-size: 38px; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 14px; flex-shrink: 0; }
+    .char-info h3 { margin: 0 0 4px; font-size: 16px; color: #222; }
+    .char-info span { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-bottom: 4px; font-weight: bold; }
+    .char-info p { margin: 0; font-size: 12.5px; color: #666; }
+
+    /* 채팅 화면 */
+    .chat-screen { display: none; flex-direction: column; height: 100%; }
+    .chat-header { padding: 14px 18px; color: white; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .header-avatar { font-size: 26px; background: rgba(255,255,255,0.25); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .header-title h3 { margin: 0; font-size: 16px; }
+    .header-title p { margin: 2px 0 0; font-size: 11px; opacity: 0.9; }
+    .change-btn { background: rgba(255,255,255,0.22); border: none; color: white; font-size: 12px; padding: 6px 11px; border-radius: 12px; cursor: pointer; font-weight: bold; }
+    .change-btn:hover { background: rgba(255,255,255,0.35); }
+
+    .chat-box { flex: 1; padding: 18px 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; background: #faf8f6; }
+    .msg-row { display: flex; align-items: flex-end; gap: 8px; max-width: 85%; }
+    .msg-row.bot-row { align-self: flex-start; }
+    .msg-row.user-row { align-self: flex-end; flex-direction: row-reverse; }
+    .mini-avatar { font-size: 22px; width: 34px; height: 34px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.06); flex-shrink: 0; }
+    .msg-content { display: flex; flex-direction: column; }
+    .bot-name { font-size: 11.5px; color: #777; margin-bottom: 4px; margin-left: 4px; }
+    .bubble { padding: 11px 15px; border-radius: 18px; font-size: 14px; line-height: 1.55; word-break: keep-all; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+    .bot-bubble { background: #ffffff; color: #2d3436; border-bottom-left-radius: 4px; }
+    .user-bubble { color: #ffffff; border-bottom-right-radius: 4px; }
+    .tag { display: inline-block; font-size: 10.5px; font-weight: bold; padding: 2px 7px; border-radius: 6px; margin-bottom: 6px; background: #f1f5f9; color: #475569; }
+    
+    /* 위기 알림 말풍선 */
+    .danger-bubble { background: #fff5f5; border: 1.5px solid #ff6b6b; color: #c92a2a; }
+    .danger-bubble .tag { background: #ff6b6b; color: white; }
+
+    /* 타이핑 애니메이션 */
+    .typing { display: flex; gap: 4px; padding: 14px 18px; align-items: center; }
+    .dot { width: 7px; height: 7px; background: #b2bec3; border-radius: 50%; animation: bounce 1.3s infinite ease-in-out; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; } 40% { transform: scale(1.1); opacity: 1; } }
+
+    .input-area { display: flex; padding: 12px; background: #ffffff; border-top: 1px solid #f0ece8; gap: 8px; }
+    input { flex: 1; border: 1.5px solid #e2ddd8; border-radius: 20px; padding: 10px 16px; font-size: 14px; outline: none; transition: border 0.2s; }
+    input:focus { border-color: #ff9f68; }
+    .send-btn { border: none; border-radius: 20px; padding: 0 18px; color: white; font-weight: bold; font-size: 14px; cursor: pointer; transition: opacity 0.2s; }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <h2>청소년 마음케어 AI 상담소</h2>
-      <p>검증된 상담 매뉴얼(RAG) 기반 안전 대화 시스템</p>
-    </div>
-    <div class="chat-box" id="chatBox">
-      <div class="msg bot">
-        <span class="tag">상담 안내</span><br>
-        안녕! 오늘 학교생활이나 친구, 가족 문제로 마음 쓰이는 일이 있니? 편하게 이야기해 줘.
+  <div class="app-container">
+    <!-- 1. 캐릭터 선택 화면 -->
+    <div class="select-screen" id="selectScreen">
+      <h2>오늘 누구랑 이야기할까? 🐾</h2>
+      <p>검증된 상담 매뉴얼을 바탕으로<br>네 마음을 따뜻하게 들어줄 친구를 골라줘!</p>
+      
+      <div class="char-list">
+        <div class="char-card" onclick="selectCharacter('mong')">
+          <div class="char-avatar" style="background:#fff3e0;">🐶</div>
+          <div class="char-info">
+            <span style="background:#ffe0b2; color:#e65100;">다정한 단짝 친구</span>
+            <h3>몽글이 (골든 리트리버)</h3>
+            <p>"무조건 네 편이야! 편하게 반말로 다 털어놔."</p>
+          </div>
+        </div>
+
+        <div class="char-card" onclick="selectCharacter('coco')">
+          <div class="char-avatar" style="background:#e8eaf6;">🐱</div>
+          <div class="char-info">
+            <span style="background:#c5cae9; color:#283593;">차분한 고민 해결사</span>
+            <h3>코코 (똑똑한 고양이)</h3>
+            <p>"복잡한 머릿속을 차분하게 정리해 줄게요."</p>
+          </div>
+        </div>
+
+        <div class="char-card" onclick="selectCharacter('toto')">
+          <div class="char-avatar" style="background:#fce4ec;">🐰</div>
+          <div class="char-info">
+            <span style="background:#f8bbd0; color:#ad1457;">긍정 에너지 응원단</span>
+            <h3>토토 (활기찬 아기토끼)</h3>
+            <p>"축 처진 기분을 몽글몽글하게 띄워줄게!"</p>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="input-area">
-      <input type="text" id="userInput" placeholder="고민을 입력하세요 (예: 시험 때문에 불안해)" onkeypress="if(event.key==='Enter') sendMessage()" />
-      <button onclick="sendMessage()">전송</button>
+
+    <!-- 2. 채팅 화면 -->
+    <div class="chat-screen" id="chatScreen">
+      <div class="chat-header" id="chatHeader">
+        <div class="header-left">
+          <div class="header-avatar" id="headerAvatar">🐶</div>
+          <div class="header-title">
+            <h3 id="headerName">몽글이</h3>
+            <p id="headerDesc">상담 매뉴얼 기반 안전 대화 중</p>
+          </div>
+        </div>
+        <button class="change-btn" onclick="goBack()">캐릭터 변경</button>
+      </div>
+
+      <div class="chat-box" id="chatBox"></div>
+
+      <div class="input-area">
+        <input type="text" id="userInput" placeholder="여기에 고민을 적어줘..." onkeypress="if(event.key==='Enter') sendMessage()" />
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">전송</button>
+      </div>
     </div>
   </div>
 
   <script>
-    // 보고서에서 설계한 상담 매뉴얼 데이터 (RAG 지식 DB 역할)
-    const counselingManual = [
-      {
-        level: "Level 3 (긴급 위기)",
-        isDanger: true,
-        keywords: ["죽고", "사라지고", "자해", "끝내고", "살기 싫"],
-        category: "긴급 위기 대응 수칙",
-        response: "지금 마음이 정말 많이 힘들고 지쳐 있구나. 혼자서 이 무게를 다 견디려 하지 않아도 돼. 지금 바로 전문가의 도움을 받을 수 있도록 연결해 줄게.<br><br>📞 <b>청소년 상담전화: 국번없이 1388 (24시간 무료)</b><br>📞 <b>자살예방 상담전화: 109</b><br>혼자가 아니니까 꼭 연락해 줘."
+    // 캐릭터별 설정 및 RAG 매뉴얼 기반 맞춤형 말투 데이터
+    const characters = {
+      mong: {
+        name: "몽글이",
+        emoji: "🐶",
+        themeColor: "#f59e0b",
+        desc: "언제나 네 편인 다정한 리트리버",
+        greeting: "안녕! 난 몽글이야 🐾 오늘 학교나 집에서 마음 쓰이는 일 있었어? 눈치 보지 말고 편하게 다 얘기해 줘!",
+        fallback: [
+          "응응, 그랬구나... 네가 얼마나 마음 썼을지 생각하니까 내 마음도 짠하다. 조금 더 자세히 얘기해 줄래? 끝까지 들어줄게!",
+          "혼자서 끙끙 앓느라 진짜 고생 많았어. 네 잘못이 아니니까 너무 자책하지 마. 지금 제일 속상한 게 뭐야?"
+        ],
+        manual: {
+          study: "시험이랑 성적 때문에 진짜 숨 막히고 불안하지? ㅠㅠ 열심히 잘하고 싶은 마음이 커서 그런 거니까 너무 스스로를 몰아세우지 마! 오늘은 거창한 계획 말고, 딱 20분만 할 수 있는 제일 쉬운 것부터 같이 해보자. 몽글이가 옆에서 응원할게!",
+          friend: "헐, 친구 문제 때문에 진짜 속상하고 마음 복잡했겠다... 믿었던 친구한테 서운하면 하루 종일 아무것도 손에 안 잡히잖아. 지금은 네 마음이 다치지 않는 게 제일 중요해. 조금 진정되면 네 기분을 솔직하게 말해보거나 믿을 수 있는 어른께 도움을 청해보자!",
+          family: "집에서 가족이랑 부딪히면 진짜 편히 쉴 곳이 없는 기분이라 너무 답답하지 ㅠㅠ 당장 부모님 생각을 바꾸긴 어려우니까, 오늘은 네 방에서 좋아하는 노래 들으면서 네 마음부터 먼저 달래주자. 넌 충분히 잘하고 있어!"
+        }
       },
-      {
-        level: "Level 1 (일반 고민)",
-        isDanger: false,
-        keywords: ["시험", "성적", "공부", "진로", "대학", "불안"],
-        category: "학업 및 진로 매뉴얼",
-        response: "시험이나 성적 때문에 압박감이 크구나. 열심히 하려는 마음이 크니까 그만큼 불안한 건 자연스러운 거야. 오늘 당장 모든 걸 다 하려 하기보다, 지금 할 수 있는 가장 작은 목표 하나만 정해서 30분만 집중해 보는 건 어떨까?"
+      coco: {
+        name: "코코",
+        emoji: "🐱",
+        themeColor: "#5c6bc0",
+        desc: "차분하게 마음을 정리해 주는 고양이",
+        greeting: "반가워요, 코코예요 🐱 머릿속이 복잡하거나 누군가에게 차분히 털어놓고 싶은 고민이 있나요? 천천히 말씀해 주세요.",
+        fallback: [
+          "그렇군요. 지금 상황이 꽤 부담스럽고 신경이 많이 쓰였을 것 같아요. 그 일 때문에 요즘 가장 크게 드는 생각은 무엇인가요?",
+          "말씀해 주셔서 고마워요. 감정이 뒤섞일 땐 말로 꺼내는 것만으로도 정리가 된답니다. 조금 더 구체적으로 들려주실 수 있나요?"
+        ],
+        manual: {
+          study: "학업과 진로에 대한 불안감은 목표가 있는 사람이라면 누구나 겪는 자연스러운 감정이에요. 막연한 걱정 전체를 한 번에 해결하려 하면 더 지치기 쉬워요. 지금 당장 바꿀 수 있는 작은 행동 한 가지만 정해서 실행해 보는 건 어떨까요?",
+          friend: "대인관계에서 오는 갈등은 자존감까지 흔들어 놓기 때문에 정말 힘들죠. 하지만 상대의 행동이 곧 당신의 가치를 결정하는 건 아니에요. 감정이 격해질 땐 한 걸음 물러서서 상황을 객관적으로 바라보는 시간을 가져보세요.",
+          family: "가족 간의 갈등은 가장 가까운 사이인 만큼 상처도 깊게 남곤 하죠. 감정이 앞설 때 대화하면 오해가 커질 수 있으니, 먼저 내가 진짜 원하는 것과 서운한 점을 메모장에 차분히 정리해 보는 걸 추천할게요."
+        }
       },
-      {
-        level: "Level 2 (주의 관찰)",
-        isDanger: false,
-        keywords: ["친구", "따돌림", "단톡", "싸웠", "외톨이", "관계"],
-        category: "대인관계 갈등 매뉴얼",
-        response: "친구 관계 때문에 마음이 많이 상하고 혼란스러웠겠다. 네 잘못이 아닌데도 스스로를 탓하게 될 때가 많지. 감정이 조금 가라앉은 뒤에 네 솔직한 기분을 차분하게 전달하거나, 믿을 수 있는 선생님·상담실에 이야기해 보는 것도 큰 도움이 돼."
-      },
-      {
-        level: "Level 2 (주의 관찰)",
-        isDanger: false,
-        keywords: ["부모님", "엄마", "아빠", "집", "가족", "잔소리"],
-        category: "가족 갈등 매뉴얼",
-        response: "가족과 대화가 통하지 않고 계속 부딪히면 집에서도 편히 쉬지 못해 정말 답답하지. 당장 부모님의 생각을 바꾸려 하기보다, 네가 어떤 부분에서 서운하고 힘든지 차분히 글로 먼저 정리해 보는 건 어떨까?"
+      toto: {
+        name: "토토",
+        emoji: "🐰",
+        themeColor: "#ec4899",
+        desc: "긍정 에너지를 주는 활기찬 아기토끼",
+        greeting: "안녕안녕! 난 토토야 🐰✨ 오늘 하루 어땠어? 속상한 일이나 답답한 일 있으면 토토한테 다 말해봐! 내가 기분 풀리게 도와줄게!",
+        fallback: [
+          "우와, 그런 일이 있었구나! 진짜 많이 신경 쓰였겠다 ㅠㅠ 그래도 나한테 이렇게 얘기해 줘서 너무 고마워! 그다음엔 어떻게 됐어?",
+          "에고, 마음이 많이 무거웠겠네! 토토가 네 기분 다 이해해. 잠깐 심호흡 크게 한 번 하고, 지금 제일 걱정되는 부분부터 같이 이야기해 보자!"
+        ],
+        manual: {
+          study: "시험 기간이라 긴장되고 불안하지?! 그치만 지금까지 버텨온 것만으로도 넌 이미 엄청 대단한 거야! 완벽하지 않아도 괜찮아~ 딱 15분만 집중하고 잠깐 스트레칭하면서 기분 전환해 보자! 넌 무조건 잘할 수 있어!",
+          friend: "친구 때문에 마음 상했구나 ㅠㅠ 그런 일 겪으면 진짜 하루 종일 기분 우울해지잖아... 네 진심을 몰라주는 사람 때문에 너무 오래 아파하지 마! 네 곁엔 널 아껴주는 사람들이 분명 더 많을 거야!",
+          family: "가족이랑 말이 안 통할 때 진짜 답답하고 화나지! 그럴 땐 잠깐 산책하거나 맛있는 거 먹으면서 기분 환기부터 시키자! 내일은 오늘보다 훨씬 더 편하게 대화할 수 있을 거야, 토토가 응원할게!"
+        }
       }
-    ];
+    };
+
+    let currentChar = null;
+    let isTyping = false;
+
+    function selectCharacter(charKey) {
+      currentChar = characters[charKey];
+      document.getElementById("selectScreen").style.display = "none";
+      document.getElementById("chatScreen").style.display = "flex";
+
+      // 테마 색상 적용
+      document.getElementById("chatHeader").style.background = currentChar.themeColor;
+      document.getElementById("sendBtn").style.background = currentChar.themeColor;
+      document.getElementById("headerAvatar").innerText = currentChar.emoji;
+      document.getElementById("headerName").innerText = currentChar.name;
+      document.getElementById("headerDesc").innerText = currentChar.desc;
+
+      // 대화창 초기화 후 첫인사 (사람처럼 살짝 딜레이 후 인사)
+      const chatBox = document.getElementById("chatBox");
+      chatBox.innerHTML = "";
+      showTypingAndReply(currentChar.greeting, "기본 공감 매뉴얼 · Level 1", false);
+    }
+
+    function goBack() {
+      if (isTyping) return;
+      document.getElementById("chatScreen").style.display = "none";
+      document.getElementById("selectScreen").style.display = "flex";
+    }
 
     function sendMessage() {
+      if (isTyping) return;
       const input = document.getElementById("userInput");
       const text = input.value.trim();
       if (!text) return;
 
-      appendMessage(text, "user");
+      appendUserMessage(text);
       input.value = "";
 
-      // RAG 검색 단계: 입력 문장에서 매뉴얼 키워드 검색
-      let matched = counselingManual.find(item =>
-        item.keywords.some(keyword => text.includes(keyword))
-      );
+      // RAG 매뉴얼 검색 및 위기 등급 판별
+      const result = getRagResponse(text);
+      showTypingAndReply(result.reply, result.tag, result.isDanger);
+    }
+
+    function getRagResponse(text) {
+      // Level 3: 긴급 위기 키워드 (모든 캐릭터 공통 안전장치 작동)
+      const dangerWords = ["죽고", "사라지고", "자해", "끝내고", "살기 싫", "자살"];
+      if (dangerWords.some(w => text.includes(w))) {
+        return {
+          tag: "긴급 위기 대응 매뉴얼 · Level 3",
+          isDanger: true,
+          reply: "잠깐만, 네가 지금 얼마나 힘들고 버거운지 느껴져서 정말 걱정이 돼. 이 힘든 마음을 절대 혼자서 감당하지 않았으면 좋겠어.<br><br>지금 바로 네 이야기를 들어줄 수 있는 전문 선생님께 연결해 줄게. 꼭 연락해 줘.<br>📞 <b>청소년 상담전화: 국번없이 1388 (24시간 무료)</b><br>📞 <b>자살예방 상담전화: 109</b>"
+        };
+      }
+
+      // 학업/진로 매뉴얼 검색
+      if (["시험", "성적", "공부", "진로", "대학", "불안", "모의고사"].some(w => text.includes(w))) {
+        return { tag: "학업·진로 매뉴얼 · Level 1", isDanger: false, reply: currentChar.manual.study };
+      }
+
+      // 대인관계 매뉴얼 검색
+      if (["친구", "따돌림", "단톡", "싸웠", "외톨이", "관계", "손절"].some(w => text.includes(w))) {
+        return { tag: "대인관계 매뉴얼 · Level 2", isDanger: false, reply: currentChar.manual.friend };
+      }
+
+      // 가족 갈등 매뉴얼 검색
+      if (["부모님", "엄마", "아빠", "집", "가족", "잔소리", "동생", "언니", "오빠"].some(w => text.includes(w))) {
+        return { tag: "가족 갈등 매뉴얼 · Level 2", isDanger: false, reply: currentChar.manual.family };
+      }
+
+      // 기본 공감 응답 랜덤 선택 (기계적인 반복 방지)
+      const randomFallback = currentChar.fallback[Math.floor(Math.random() * currentChar.fallback.length)];
+      return { tag: "정서 공감 매뉴얼 · Level 1", isDanger: false, reply: randomFallback };
+    }
+
+    function appendUserMessage(text) {
+      const chatBox = document.getElementById("chatBox");
+      const row = document.createElement("div");
+      row.className = "msg-row user-row";
+      row.innerHTML = `<div class="bubble user-bubble" style="background:${currentChar.themeColor}">${escapeHtml(text)}</div>`;
+      chatBox.appendChild(row);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // 사람처럼 입력 중(...) 표시 후 자연스러운 시간 뒤에 답변 출력
+    function showTypingAndReply(replyHtml, tagText, isDanger) {
+      isTyping = true;
+      document.getElementById("sendBtn").disabled = true;
+
+      const chatBox = document.getElementById("chatBox");
+      const typingRow = document.createElement("div");
+      typingRow.className = "msg-row bot-row";
+      typingRow.id = "typingIndicator";
+      typingRow.innerHTML = `
+        <div class="mini-avatar">${currentChar.emoji}</div>
+        <div class="msg-content">
+          <span class="bot-name">${currentChar.name}가 입력 중...</span>
+          <div class="bubble bot-bubble typing">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+      `;
+      chatBox.appendChild(typingRow);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      // 답변 길이에 비례해 1.3초 ~ 2.2초 자연스러운 대기 시간 부여
+      const delay = Math.min(2200, Math.max(1300, replyHtml.length * 15));
 
       setTimeout(() => {
-        if (matched) {
-          appendBotMessage(matched.category, matched.level, matched.response, matched.isDanger);
-        } else {
-          appendBotMessage(
-            "기본 공감 매뉴얼",
-            "Level 1 (일반 고민)",
-            "그런 일이 있었구나. 네가 지금 느끼는 감정이 어떤 건지 조금 더 자세히 들려줄 수 있니? 네 이야기를 끝까지 들어줄게.",
-            false
-          );
-        }
-      }, 400);
+        const indicator = document.getElementById("typingIndicator");
+        if (indicator) indicator.remove();
+
+        const botRow = document.createElement("div");
+        botRow.className = "msg-row bot-row";
+        const bubbleClass = isDanger ? "bubble bot-bubble danger-bubble" : "bubble bot-bubble";
+        botRow.innerHTML = `
+          <div class="mini-avatar">${currentChar.emoji}</div>
+          <div class="msg-content">
+            <span class="bot-name">${currentChar.name}</span>
+            <div class="${bubbleClass}">
+              <span class="tag">${tagText}</span><br>${replyHtml}
+            </div>
+          </div>
+        `;
+        chatBox.appendChild(botRow);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        isTyping = false;
+        document.getElementById("sendBtn").disabled = false;
+        document.getElementById("userInput").focus();
+      }, delay);
     }
 
-    function appendMessage(text, sender) {
-      const chatBox = document.getElementById("chatBox");
+    function escapeHtml(text) {
       const div = document.createElement("div");
-      div.className = `msg ${sender}`;
       div.innerText = text;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function appendBotMessage(category, level, response, isDanger) {
-      const chatBox = document.getElementById("chatBox");
-      const div = document.createElement("div");
-      div.className = isDanger ? "msg bot danger" : "msg bot";
-      div.innerHTML = `<span class="tag">${category} · ${level}</span><br>${response}`;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
+      return div.innerHTML;
     }
   </script>
 </body>
