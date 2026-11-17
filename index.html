@@ -3,67 +3,66 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>마음친구 AI 상담소</title>
+  <title>마음온(On) - 3D AI 심리 상담소</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <style>
     * { box-sizing: border-box; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
     body {
-      background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+      background: radial-gradient(circle at top left, #eef2ff, #fdf4ff, #fff7ed);
       display: flex; justify-content: center; align-items: center;
       min-height: 100vh; margin: 0; padding: 12px;
     }
     .app-container {
       width: 100%; max-width: 450px; height: 88vh; max-height: 780px;
-      background: #ffffff; border-radius: 28px;
-      box-shadow: 0 14px 35px rgba(0,0,0,0.1);
+      background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(12px);
+      border-radius: 30px; box-shadow: 0 18px 45px rgba(30, 41, 59, 0.12);
       overflow: hidden; display: flex; flex-direction: column; position: relative;
+      border: 1px solid rgba(255,255,255,0.85);
     }
 
     /* 1. 캐릭터 선택 화면 */
     .select-screen {
-      flex: 1; padding: 24px 20px; display: flex; flex-direction: column;
-      background: linear-gradient(180deg, #fff8f3 0%, #ffffff 100%);
+      flex: 1; padding: 24px 18px; display: flex; flex-direction: column;
       overflow-y: auto;
     }
     .select-header { text-align: center; margin-bottom: 18px; }
-    .select-header h2 { margin: 0 0 6px; font-size: 21px; color: #222; letter-spacing: -0.5px; }
-    .select-header p { margin: 0; font-size: 13px; color: #777; line-height: 1.45; }
+    .select-header h2 { margin: 0 0 6px; font-size: 21px; color: #1e293b; letter-spacing: -0.5px; }
+    .select-header p { margin: 0; font-size: 13px; color: #64748b; line-height: 1.45; }
 
     .char-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; }
     .char-card {
-      background: #ffffff; border: 2px solid #f1ece6; border-radius: 20px;
-      padding: 14px 10px 12px; cursor: pointer; transition: all 0.22s ease;
+      background: #ffffff; border: 2px solid #f1f5f9; border-radius: 22px;
+      padding: 12px 10px 14px; cursor: pointer; transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
       display: flex; flex-direction: column; align-items: center; text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.03);
     }
     .char-card:hover {
-      transform: translateY(-4px); border-color: #ff9f68;
-      box-shadow: 0 8px 20px rgba(255, 159, 104, 0.18);
+      transform: translateY(-5px); border-color: #818cf8;
+      box-shadow: 0 12px 24px rgba(99, 102, 241, 0.16);
     }
-    .card-illust {
-      width: 105px; height: 115px; border-radius: 16px;
-      display: flex; align-items: flex-end; justify-content: center;
-      overflow: hidden; margin-bottom: 10px;
+    .card-3d-preview {
+      width: 118px; height: 118px; border-radius: 18px;
+      margin-bottom: 10px; overflow: hidden; position: relative;
     }
     .card-badge {
-      font-size: 10.5px; font-weight: bold; padding: 3px 8px;
-      border-radius: 10px; margin-bottom: 5px;
+      font-size: 10.5px; font-weight: bold; padding: 3px 9px;
+      border-radius: 12px; margin-bottom: 5px;
     }
-    .char-card h3 { margin: 0 0 4px; font-size: 15.5px; color: #222; }
-    .char-card p { margin: 0; font-size: 11.5px; color: #666; line-height: 1.35; word-break: keep-all; }
+    .char-card h3 { margin: 0 0 4px; font-size: 16px; color: #0f172a; }
+    .char-card p { margin: 0; font-size: 11.5px; color: #64748b; line-height: 1.35; word-break: keep-all; }
 
     /* 2. 채팅 화면 */
     .chat-screen { display: none; flex-direction: column; height: 100%; }
 
-    /* 상단 바 */
     .top-bar {
-      padding: 12px 16px; color: white; display: flex;
-      align-items: center; justify-content: space-between; z-index: 2;
+      padding: 13px 18px; color: white; display: flex;
+      align-items: center; justify-content: space-between; z-index: 5;
     }
     .top-bar-title { display: flex; align-items: center; gap: 8px; }
-    .top-bar-title h3 { margin: 0; font-size: 16px; }
+    .top-bar-title h3 { margin: 0; font-size: 16.5px; }
     .top-bar-title span {
       font-size: 11px; background: rgba(255,255,255,0.22);
-      padding: 2px 8px; border-radius: 10px;
+      padding: 2px 9px; border-radius: 10px;
     }
     .change-btn {
       background: rgba(255,255,255,0.25); border: none; color: white;
@@ -72,67 +71,56 @@
     }
     .change-btn:hover { background: rgba(255,255,255,0.4); }
 
-    /* 캐릭터 상반신 스탠딩 스테이지 (대화하는 동안 항상 보임) */
-    .character-stage {
-      height: 175px; display: flex; align-items: flex-end; justify-content: center;
-      position: relative; overflow: hidden; border-bottom: 1px solid #f0ebe6;
-      transition: background 0.3s;
+    /* 3D 캐릭터 무대 */
+    .stage-3d-wrapper {
+      height: 210px; width: 100%; position: relative;
+      border-bottom: 1px solid #f1f5f9; overflow: hidden;
+      cursor: grab;
     }
-    .stage-bg-circle {
-      position: absolute; width: 210px; height: 210px; border-radius: 50%;
-      background: rgba(255,255,255,0.55); bottom: -45px;
-    }
-    .standing-character {
-      width: 165px; height: 165px; z-index: 1;
-      animation: breathe 3.2s ease-in-out infinite;
-      transform-origin: bottom center;
-    }
-    .standing-character.thinking {
-      animation: nodThink 0.7s ease-in-out infinite;
-    }
-    @keyframes breathe {
-      0%, 100% { transform: translateY(0px) scale(1); }
-      50% { transform: translateY(-3px) scale(1.015); }
-    }
-    @keyframes nodThink {
-      0%, 100% { transform: rotate(0deg) translateY(0px); }
-      50% { transform: rotate(-3deg) translateY(-4px); }
+    .stage-3d-wrapper:active { cursor: grabbing; }
+    #threeCanvasContainer { width: 100%; height: 100%; }
+    .stage-hint {
+      position: absolute; top: 10px; left: 14px;
+      font-size: 10.5px; color: rgba(30, 41, 59, 0.65);
+      background: rgba(255,255,255,0.75); padding: 3px 9px; border-radius: 10px;
+      pointer-events: none;
     }
     .status-pill {
-      position: absolute; bottom: 10px; right: 14px; z-index: 2;
-      background: rgba(255,255,255,0.9); color: #555;
-      font-size: 11px; padding: 4px 10px; border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06); font-weight: bold;
+      position: absolute; bottom: 10px; right: 14px;
+      background: rgba(255,255,255,0.94); color: #334155;
+      font-size: 11px; padding: 4px 11px; border-radius: 14px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08); font-weight: bold;
+      pointer-events: none;
     }
 
-    /* 대화창 영역 */
+    /* 대화창 */
     .chat-box {
       flex: 1; padding: 16px 14px; overflow-y: auto;
-      display: flex; flex-direction: column; gap: 12px; background: #faf8f6;
+      display: flex; flex-direction: column; gap: 12px; background: #f8fafc;
     }
     .msg-row { display: flex; flex-direction: column; max-width: 82%; }
     .msg-row.bot-row { align-self: flex-start; }
     .msg-row.user-row { align-self: flex-end; align-items: flex-end; }
-    .sender-label { font-size: 11px; color: #888; margin: 0 0 4px 6px; font-weight: bold; }
+    .sender-label { font-size: 11px; color: #64748b; margin: 0 0 4px 6px; font-weight: bold; }
     .bubble {
       padding: 11px 15px; border-radius: 18px; font-size: 13.8px;
-      line-height: 1.55; word-break: keep-all; box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      line-height: 1.55; word-break: keep-all; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
-    .bot-bubble { background: #ffffff; color: #2d3436; border-top-left-radius: 4px; border: 1px solid #f0ece8; }
+    .bot-bubble { background: #ffffff; color: #1e293b; border-top-left-radius: 4px; border: 1px solid #e2e8f0; }
     .user-bubble { color: #ffffff; border-top-right-radius: 4px; }
     .tag {
       display: inline-block; font-size: 10px; font-weight: bold;
       padding: 2px 7px; border-radius: 6px; margin-bottom: 5px;
-      background: #f1f5f9; color: #64748b;
+      background: #f1f5f9; color: #475569;
     }
 
-    /* 긴급 위기 안내 말풍선 */
+    /* 긴급 위기 알림 말풍선 */
     .danger-bubble { background: #fff5f5; border: 1.5px solid #ff6b6b; color: #c92a2a; }
     .danger-bubble .tag { background: #ff6b6b; color: white; }
 
     /* 타이핑 점 애니메이션 */
     .typing-dots { display: flex; gap: 5px; padding: 13px 16px; align-items: center; }
-    .dot { width: 7px; height: 7px; background: #adb5bd; border-radius: 50%; animation: bounce 1.3s infinite ease-in-out; }
+    .dot { width: 7px; height: 7px; background: #94a3b8; border-radius: 50%; animation: bounce 1.3s infinite ease-in-out; }
     .dot:nth-child(2) { animation-delay: 0.2s; }
     .dot:nth-child(3) { animation-delay: 0.4s; }
     @keyframes bounce { 0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; } 40% { transform: scale(1.15); opacity: 1; } }
@@ -140,13 +128,13 @@
     /* 입력창 */
     .input-area {
       display: flex; padding: 11px 12px; background: #ffffff;
-      border-top: 1px solid #eeeae6; gap: 8px;
+      border-top: 1px solid #e2e8f0; gap: 8px;
     }
     input {
-      flex: 1; border: 1.5px solid #e2ddd8; border-radius: 22px;
+      flex: 1; border: 1.5px solid #cbd5e1; border-radius: 22px;
       padding: 10px 16px; font-size: 14px; outline: none; transition: 0.2s;
     }
-    input:focus { border-color: #ff9f68; }
+    input:focus { border-color: #6366f1; }
     .send-btn {
       border: none; border-radius: 22px; padding: 0 18px;
       color: white; font-weight: bold; font-size: 14px; cursor: pointer;
@@ -164,35 +152,35 @@
       </div>
 
       <div class="char-grid">
-        <!-- 캐릭터 1: 친구 (하늘이) -->
-        <div class="char-card" onclick="selectCharacter('haneul')">
-          <div class="card-illust" style="background:#e3f2fd;" id="card-svg-haneul"></div>
-          <span class="card-badge" style="background:#bbdefb; color:#1565c0;">동갑내기 단짝 친구</span>
-          <h3>하늘이</h3>
+        <!-- 1. 친구: 하루 -->
+        <div class="char-card" onclick="selectCharacter('haru')">
+          <div class="card-3d-preview" style="background:#e0f2fe;" id="preview-haru"></div>
+          <span class="card-badge" style="background:#bae6fd; color:#0369a1;">동갑내기 단짝 친구</span>
+          <h3>하루</h3>
           <p>"무조건 네 편이야! 편하게 반말로 다 털어놔."</p>
         </div>
 
-        <!-- 캐릭터 2: 선생님 (윤서 쌤) -->
+        <!-- 2. 선생님: 선생님 -->
         <div class="char-card" onclick="selectCharacter('teacher')">
-          <div class="card-illust" style="background:#e8f5e9;" id="card-svg-teacher"></div>
-          <span class="card-badge" style="background:#c8e6c9; color:#2e7d32;">다정한 상담 선생님</span>
-          <h3>윤서 선생님</h3>
+          <div class="card-3d-preview" style="background:#dcfce7;" id="preview-teacher"></div>
+          <span class="card-badge" style="background:#bbf7d0; color:#15803d;">다정한 상담 선생님</span>
+          <h3>선생님</h3>
           <p>"혼자 고민하지 마세요. 선생님이 차분히 들어줄게요."</p>
         </div>
 
-        <!-- 캐릭터 3: 강아지 (몽글이) -->
-        <div class="char-card" onclick="selectCharacter('mong')">
-          <div class="card-illust" style="background:#fff3e0;" id="card-svg-mong"></div>
-          <span class="card-badge" style="background:#ffe0b2; color:#ef6c00;">폭신한 리트리버</span>
-          <h3>몽글이</h3>
+        <!-- 3. 강아지: 밤비 -->
+        <div class="char-card" onclick="selectCharacter('bambi')">
+          <div class="card-3d-preview" style="background:#ffedd5;" id="preview-bambi"></div>
+          <span class="card-badge" style="background:#fed7aa; color:#c2410c;">말랑한 아기 강아지</span>
+          <h3>밤비</h3>
           <p>"꼬리 흔들며 기다렸어! 오늘 무슨 일 있었어?"</p>
         </div>
 
-        <!-- 캐릭터 4: 고양이 (코코) -->
-        <div class="char-card" onclick="selectCharacter('coco')">
-          <div class="card-illust" style="background:#f3e5f5;" id="card-svg-coco"></div>
-          <span class="card-badge" style="background:#e1bee7; color:#6a1b9a;">똑똑한 치즈냥이</span>
-          <h3>코코</h3>
+        <!-- 4. 고양이: 루나 -->
+        <div class="char-card" onclick="selectCharacter('luna')">
+          <div class="card-3d-preview" style="background:#f3e8ff;" id="preview-luna"></div>
+          <span class="card-badge" style="background:#e9d5ff; color:#7e22ce;">차분한 달빛 고양이</span>
+          <h3>루나</h3>
           <p>"복잡한 머릿속을 차분하게 정리해 줄게냥."</p>
         </div>
       </div>
@@ -202,16 +190,16 @@
     <div class="chat-screen" id="chatScreen">
       <div class="top-bar" id="topBar">
         <div class="top-bar-title">
-          <h3 id="headerName">하늘이</h3>
+          <h3 id="headerName">하루</h3>
           <span id="headerRole">동갑내기 단짝</span>
         </div>
         <button class="change-btn" onclick="goBack()">캐릭터 바꾸기</button>
       </div>
 
-      <!-- 상반신 일러스트 스탠딩 영역 -->
-      <div class="character-stage" id="charStage">
-        <div class="stage-bg-circle"></div>
-        <div class="standing-character" id="standingChar"></div>
+      <!-- 실시간 3D 입체 캐릭터 무대 -->
+      <div class="stage-3d-wrapper" id="stageWrapper">
+        <div class="stage-hint">↔ 좌우로 드래그하면 입체로 움직여요</div>
+        <div id="threeCanvasContainer"></div>
         <div class="status-pill" id="statusPill">● 이야기 듣는 중</div>
       </div>
 
@@ -225,149 +213,13 @@
   </div>
 
   <script>
-    // 상반신까지 그려진 귀여운 벡터 일러스트(SVG) 모음
-    const svgs = {
-      // 1. 사람 친구 (하늘이 - 후드티 입은 귀여운 단짝 학생)
-      haneul: `
-        <svg viewBox="0 0 200 200" width="100%" height="100%">
-          <!-- 후드티 몸통 & 팔 -->
-          <path d="M42 200 C42 152, 68 138, 100 138 C132 138, 158 152, 158 200 Z" fill="#42a5f5"/>
-          <path d="M68 142 Q100 162 132 142 L126 156 Q100 172 74 156 Z" fill="#1e88e5"/>
-          <!-- 후드 끈 -->
-          <line x1="86" y1="154" x2="86" y2="182" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
-          <line x1="114" y1="154" x2="114" y2="182" stroke="#ffffff" stroke-width="3.5" stroke-linecap="round"/>
-          <!-- 손 인사 -->
-          <circle cx="152" cy="175" r="13" fill="#ffe0bd"/>
-          <!-- 목 -->
-          <rect x="90" y="122" width="20" height="22" rx="8" fill="#f5cfa0"/>
-          <!-- 뒷머리 -->
-          <path d="M52 92 C48 45, 152 45, 148 92 C148 118, 138 128, 132 128 L68 128 C62 128, 52 118, 52 92 Z" fill="#3e2723"/>
-          <!-- 얼굴 -->
-          <path d="M62 85 C62 54, 138 54, 138 85 C138 116, 122 132, 100 132 C78 132, 62 116, 62 85 Z" fill="#ffe0bd"/>
-          <!-- 앞머리 -->
-          <path d="M58 84 C60 44, 140 44, 142 84 C132 68, 118 66, 106 78 C98 66, 84 66, 74 78 C66 68, 60 74, 58 84 Z" fill="#3e2723"/>
-          <!-- 눈 & 볼터치 & 웃는 입 -->
-          <circle cx="83" cy="94" r="4.5" fill="#2c1e16"/>
-          <circle cx="84.5" cy="92.5" r="1.5" fill="#ffffff"/>
-          <circle cx="117" cy="94" r="4.5" fill="#2c1e16"/>
-          <circle cx="118.5" cy="92.5" r="1.5" fill="#ffffff"/>
-          <ellipse cx="74" cy="103" rx="6" ry="3.5" fill="#ff8a80" opacity="0.55"/>
-          <ellipse cx="126" cy="103" rx="6" ry="3.5" fill="#ff8a80" opacity="0.55"/>
-          <path d="M92 108 Q100 116 108 108" fill="none" stroke="#d84315" stroke-width="3" stroke-linecap="round"/>
-        </svg>`,
-
-      // 2. 상담 선생님 (윤서 쌤 - 니트 가디건 + 동그란 안경 + 포근한 미소)
-      teacher: `
-        <svg viewBox="0 0 200 200" width="100%" height="100%">
-          <!-- 긴 머리카락 뒷부분 -->
-          <path d="M50 85 C46 38, 154 38, 150 85 L155 155 L45 155 Z" fill="#4e342e"/>
-          <!-- 가디건 & 블라우스 몸통 -->
-          <path d="M38 200 C38 152, 66 138, 100 138 C134 138, 162 152, 162 200 Z" fill="#66bb6a"/>
-          <path d="M82 138 L100 176 L118 138 Z" fill="#ffffff"/>
-          <!-- 명찰 포인트 -->
-          <rect x="118" y="164" width="22" height="11" rx="3" fill="#ffffff" opacity="0.9"/>
-          <!-- 목 -->
-          <rect x="91" y="122" width="18" height="20" rx="7" fill="#f5cfa0"/>
-          <!-- 얼굴 -->
-          <path d="M64 84 C64 54, 136 54, 136 84 C136 115, 120 130, 100 130 C80 130, 64 115, 64 84 Z" fill="#ffe0bd"/>
-          <!-- 차분한 앞머리 -->
-          <path d="M60 84 C62 45, 138 45, 140 84 C126 64, 105 62, 95 76 C84 62, 70 66, 60 84 Z" fill="#4e342e"/>
-          <!-- 동그란 안경 -->
-          <circle cx="83" cy="93" r="11" fill="rgba(255,255,255,0.25)" stroke="#5d4037" stroke-width="2.2"/>
-          <circle cx="117" cy="93" r="11" fill="rgba(255,255,255,0.25)" stroke="#5d4037" stroke-width="2.2"/>
-          <line x1="94" y1="93" x2="106" y2="93" stroke="#5d4037" stroke-width="2.2"/>
-          <!-- 다정한 눈 & 미소 -->
-          <path d="M78 93 Q83 88 88 93" fill="none" stroke="#3e2723" stroke-width="2.6" stroke-linecap="round"/>
-          <path d="M112 93 Q117 88 122 93" fill="none" stroke="#3e2723" stroke-width="2.6" stroke-linecap="round"/>
-          <ellipse cx="74" cy="104" rx="5.5" ry="3" fill="#ffab91" opacity="0.6"/>
-          <ellipse cx="126" cy="104" rx="5.5" ry="3" fill="#ffab91" opacity="0.6"/>
-          <path d="M93 110 Q100 116 107 110" fill="none" stroke="#d84315" stroke-width="2.6" stroke-linecap="round"/>
-        </svg>`,
-
-      // 3. 강아지 친구 (몽글이 - 목도리 두른 골든 리트리버 상반신)
-      mong: `
-        <svg viewBox="0 0 200 200" width="100%" height="100%">
-          <!-- 상반신 몸통 & 앞발 -->
-          <path d="M52 200 C52 150, 72 135, 100 135 C128 135, 148 150, 148 200 Z" fill="#f6c270"/>
-          <ellipse cx="100" cy="172" rx="22" ry="26" fill="#fff3dc"/>
-          <!-- 귀여운 앞발 두 개 -->
-          <ellipse cx="76" cy="188" rx="13" ry="15" fill="#f6c270" stroke="#e0a44c" stroke-width="2"/>
-          <ellipse cx="124" cy="188" rx="13" ry="15" fill="#f6c270" stroke="#e0a44c" stroke-width="2"/>
-          <!-- 주황색 스카프 목도리 -->
-          <path d="M68 134 Q100 148 132 134 L136 146 Q100 160 64 146 Z" fill="#ff7043"/>
-          <path d="M112 146 L122 172 L134 166 L124 143 Z" fill="#ff7043"/>
-          <!-- 축 처진 리트리버 귀 -->
-          <path d="M58 68 C38 72, 34 114, 52 122 C62 125, 66 105, 64 82 Z" fill="#d9963b"/>
-          <path d="M142 68 C162 72, 166 114, 148 122 C138 125, 134 105, 136 82 Z" fill="#d9963b"/>
-          <!-- 얼굴 -->
-          <ellipse cx="100" cy="92" rx="44" ry="40" fill="#f6c270"/>
-          <!-- 입 주변 밝은 털 -->
-          <ellipse cx="100" cy="104" rx="22" ry="17" fill="#fff3dc"/>
-          <!-- 눈, 코, 혀 -->
-          <circle cx="82" cy="86" r="4.8" fill="#2c1e16"/>
-          <circle cx="83.5" cy="84.5" r="1.6" fill="#ffffff"/>
-          <circle cx="118" cy="86" r="4.8" fill="#2c1e16"/>
-          <circle cx="119.5" cy="84.5" r="1.6" fill="#ffffff"/>
-          <ellipse cx="100" cy="97" rx="7" ry="5" fill="#3e2723"/>
-          <path d="M90 107 Q95 113 100 107 Q105 113 110 107" fill="none" stroke="#3e2723" stroke-width="2.5" stroke-linecap="round"/>
-          <path d="M95 110 C95 119, 105 119, 105 110 Z" fill="#ff8a80"/>
-        </svg>`,
-
-      // 4. 고양이 친구 (코코 - 보라색 리본을 맨 똑똑한 치즈 고양이 상반신)
-      coco: `
-        <svg viewBox="0 0 200 200" width="100%" height="100%">
-          <!-- 상반신 몸통 -->
-          <path d="M56 200 C56 152, 74 138, 100 138 C126 138, 144 152, 144 200 Z" fill="#ffcc80"/>
-          <ellipse cx="100" cy="174" rx="20" ry="25" fill="#fff8e7"/>
-          <!-- 앞발 -->
-          <ellipse cx="78" cy="190" rx="12" ry="13" fill="#fff8e7" stroke="#f5b041" stroke-width="2"/>
-          <ellipse cx="122" cy="190" rx="12" ry="13" fill="#fff8e7" stroke="#f5b041" stroke-width="2"/>
-          <!-- 보라색 리본 목걸이 -->
-          <path d="M72 136 Q100 146 128 136 L128 143 Q100 153 72 143 Z" fill="#9c27b0"/>
-          <polygon points="100,143 88,136 88,150" fill="#ba68c8"/>
-          <polygon points="100,143 112,136 112,150" fill="#ba68c8"/>
-          <circle cx="100" cy="143" r="4" fill="#f3e5f5"/>
-          <!-- 뾰족한 고양이 귀 -->
-          <polygon points="56,78 52,38 86,58" fill="#ffb74d"/>
-          <polygon points="60,73 57,46 80,60" fill="#ffccbc"/>
-          <polygon points="144,78 148,38 114,58" fill="#ffb74d"/>
-          <polygon points="140,73 143,46 120,60" fill="#ffccbc"/>
-          <!-- 얼굴 -->
-          <ellipse cx="100" cy="93" rx="44" ry="38" fill="#ffcc80"/>
-          <!-- 이마 줄무늬 -->
-          <rect x="97.5" y="56" width="5" height="12" rx="2.5" fill="#ef6c00" opacity="0.7"/>
-          <rect x="88" y="59" width="4" height="9" rx="2" fill="#ef6c00" opacity="0.7"/>
-          <rect x="108" y="59" width="4" height="9" rx="2" fill="#ef6c00" opacity="0.7"/>
-          <!-- 눈, 코, 고양이 입, 수염 -->
-          <circle cx="81" cy="90" r="5" fill="#2c1e16"/>
-          <circle cx="82.5" cy="88.5" r="1.7" fill="#ffffff"/>
-          <circle cx="119" cy="90" r="5" fill="#2c1e16"/>
-          <circle cx="120.5" cy="88.5" r="1.7" fill="#ffffff"/>
-          <polygon points="96,99 104,99 100,104" fill="#ff8a80"/>
-          <path d="M91 106 Q95.5 111 100 106 Q104.5 111 109 106" fill="none" stroke="#4e342e" stroke-width="2.3" stroke-linecap="round"/>
-          <line x1="46" y1="95" x2="64" y2="97" stroke="#8d6e63" stroke-width="2" stroke-linecap="round"/>
-          <line x1="46" y1="104" x2="64" y2="103" stroke="#8d6e63" stroke-width="2" stroke-linecap="round"/>
-          <line x1="154" y1="95" x2="136" y2="97" stroke="#8d6e63" stroke-width="2" stroke-linecap="round"/>
-          <line x1="154" y1="104" x2="136" y2="103" stroke="#8d6e63" stroke-width="2" stroke-linecap="round"/>
-        </svg>`
-    };
-
-    // 페이지 열릴 때 선택 카드에 일러스트 삽입
-    window.onload = () => {
-      document.getElementById("card-svg-haneul").innerHTML = svgs.haneul;
-      document.getElementById("card-svg-teacher").innerHTML = svgs.teacher;
-      document.getElementById("card-svg-mong").innerHTML = svgs.mong;
-      document.getElementById("card-svg-coco").innerHTML = svgs.coco;
-    };
-
-    // 캐릭터별 성격, 말투, RAG 상담 매뉴얼 응답 데이터
+    // 캐릭터별 데이터 (하루, 선생님, 밤비, 루나)
     const characters = {
-      haneul: {
-        name: "하늘이",
+      haru: {
+        name: "하루",
         role: "동갑내기 단짝 친구",
-        themeColor: "#2196f3",
-        stageBg: "linear-gradient(180deg, #e3f2fd 0%, #f5f9ff 100%)",
-        svg: svgs.haneul,
+        themeColor: "#0284c7",
+        stageBg: "linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 100%)",
         greeting: "야호! 왔구나! 오늘 학교에서나 집에서 무슨 일 있었어? 눈치 보지 말고 나한테 편하게 반말로 다 얘기해 봐!",
         fallback: [
           "헐 진짜? 네가 얼마나 마음 쓰였을지 생각하니까 나도 속상하다... 그다음엔 어떻게 됐어? 끝까지 다 들어줄게!",
@@ -380,11 +232,10 @@
         }
       },
       teacher: {
-        name: "윤서 선생님",
+        name: "선생님",
         role: "다정한 상담 선생님",
-        themeColor: "#43a047",
-        stageBg: "linear-gradient(180deg, #e8f5e9 0%, #f6fbf6 100%)",
-        svg: svgs.teacher,
+        themeColor: "#16a34a",
+        stageBg: "linear-gradient(180deg, #dcfce7 0%, #f0fdf4 100%)",
         greeting: "어서 오세요, 반가워요. 오늘 마음이 무겁거나 누군가에게 차분히 털어놓고 싶은 고민이 있나요? 선생님이 천천히 들어줄게요.",
         fallback: [
           "그랬군요. 혼자서 그 감정을 감당하느라 많이 애썼겠어요. 선생님이 끝까지 함께 고민해 줄 테니, 조금 더 자세히 이야기해 줄 수 있나요?",
@@ -396,30 +247,28 @@
           family: "가장 가까운 가족과 마음이 통하지 않을 때 느끼는 외로움이 참 크죠. 감정이 격해져 있을 때 대화하면 서로 상처가 되는 말만 오가기 쉬워요. 먼저 내가 어떤 부분에서 서운했는지 노트에 차분히 적어보면서 마음을 정리해 보는 건 어떨까요?"
         }
       },
-      mong: {
-        name: "몽글이",
-        role: "폭신한 리트리버",
-        themeColor: "#fb8c00",
-        stageBg: "linear-gradient(180deg, #fff3e0 0%, #fffaf2 100%)",
-        svg: svgs.mong,
-        greeting: "멍! 반가워! 꼬리 흔들면서 기다리고 있었어 🐾 오늘 하루 어땠어? 힘들거나 속상한 일 있으면 몽글이한테 다 털어놔!",
+      bambi: {
+        name: "밤비",
+        role: "말랑한 아기 강아지",
+        themeColor: "#ea580c",
+        stageBg: "linear-gradient(180deg, #ffedd5 0%, #fff7ed 100%)",
+        greeting: "멍! 반가워! 꼬리 흔들면서 기다리고 있었어 🐾 오늘 하루 어땠어? 힘들거나 속상한 일 있으면 밤비한테 다 털어놔!",
         fallback: [
           "낑... 그런 일이 있었구나. 네 마음이 얼마나 무거웠을지 생각하니까 내 귀도 축 처진다. 내가 옆에 꼭 붙어 있을 테니 조금 더 얘기해 줄래?",
-          "오늘 하루도 버텨내느라 진짜 수고 많았어! 네가 어떤 선택을 하든 몽글이는 무조건 네 편이야. 지금 제일 힘든 점이 뭐야?"
+          "오늘 하루도 버텨내느라 진짜 수고 많았어! 네가 어떤 선택을 하든 밤비는 무조건 네 편이야. 지금 제일 힘든 점이 뭐야?"
         ],
         manual: {
-          study: "시험 때문에 긴장되고 불안하구나! 멍! 열심히 하려는 네 모습이 몽글이 눈엔 이미 너무 멋져 보여. 잠깐 크게 심호흡 한 번 하고, 딱 15분만 집중한 뒤에 잠깐 쉬어가자! 넌 충분히 잘해낼 수 있어!",
-          friend: "친구 때문에 마음 아팠구나... 믿었던 사이일수록 서운함이 훨씬 크잖아. 네 진심을 몰라주는 일 때문에 너무 오래 아파하지 마! 몽글이가 네 기분 풀릴 때까지 계속 이야기 들어줄게!",
+          study: "시험 때문에 긴장되고 불안하구나! 멍! 열심히 하려는 네 모습이 밤비 눈엔 이미 너무 멋져 보여. 잠깐 크게 심호흡 한 번 하고, 딱 15분만 집중한 뒤에 잠깐 쉬어가자! 넌 충분히 잘해낼 수 있어!",
+          friend: "친구 때문에 마음 아팠구나... 믿었던 사이일수록 서운함이 훨씬 크잖아. 네 진심을 몰라주는 일 때문에 너무 오래 아파하지 마! 밤비가 네 기분 풀릴 때까지 계속 이야기 들어줄게!",
           family: "가족이랑 부딪히면 집에서도 편히 쉬지 못해 정말 답답하지... 오늘은 맛있는 간식도 먹고 좋아하는 거 보면서 네 마음부터 따뜻하게 안아주자. 내일은 분명 오늘보다 마음이 한결 편해질 거야!"
         }
       },
-      coco: {
-        name: "코코",
-        role: "똑똑한 치즈냥이",
-        themeColor: "#8e24aa",
-        stageBg: "linear-gradient(180deg, #f3e5f5 0%, #fbf5fc 100%)",
-        svg: svgs.coco,
-        greeting: "안녕, 난 코코야. 머릿속이 복잡하거나 감정이 뒤엉켜서 정리가 안 될 때 언제든 찾아와. 차분하게 같이 풀어보자냥.",
+      luna: {
+        name: "루나",
+        role: "차분한 달빛 고양이",
+        themeColor: "#9333ea",
+        stageBg: "linear-gradient(180deg, #f3e8ff 0%, #faf5ff 100%)",
+        greeting: "안녕, 난 루나야. 머릿속이 복잡하거나 감정이 뒤엉켜서 정리가 안 될 때 언제든 찾아와. 차분하게 같이 풀어보자냥.",
         fallback: [
           "음, 그런 상황이 있었구나. 신경이 많이 쓰였을 법해. 감정이 복잡할 땐 하나씩 차근차근 짚어보는 게 좋아. 그 일 때문에 어떤 생각이 제일 많이 들어?",
           "솔직하게 말해줘서 고마워. 네가 지금 느끼는 감정은 아주 자연스러운 반응이야. 조금 더 구체적으로 들려줄 수 있을까?"
@@ -432,21 +281,382 @@
       }
     };
 
+    // ================= 3D 캐릭터 생성 엔진 (Three.js) =================
+    function build3DCharacterMesh(type) {
+      const group = new THREE.Group();
+      const mat = (color, rough = 0.45) => new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: 0.05 });
+
+      // 공통 눈 & 볼터치 생성 헬퍼
+      function addCuteFace(headGroup, eyeY, eyeZ, cheekColor = 0xff8a80) {
+        const eyeGeo = new THREE.SphereGeometry(0.11, 20, 20);
+        const eyeMat = mat(0x1e293b, 0.15);
+        const shineGeo = new THREE.SphereGeometry(0.038, 12, 12);
+        const shineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+        [-0.32, 0.32].forEach(x => {
+          const eye = new THREE.Mesh(eyeGeo, eyeMat);
+          eye.position.set(x, eyeY, eyeZ);
+          const shine = new THREE.Mesh(shineGeo, shineMat);
+          shine.position.set(x + 0.035, eyeY + 0.035, eyeZ + 0.09);
+          headGroup.add(eye, shine);
+        });
+
+        const cheekGeo = new THREE.SphereGeometry(0.12, 16, 16);
+        const cheekMat = new THREE.MeshBasicMaterial({ color: cheekColor, transparent: true, opacity: 0.45 });
+        [-0.48, 0.48].forEach(x => {
+          const cheek = new THREE.Mesh(cheekGeo, cheekMat);
+          cheek.scale.set(1.2, 0.7, 0.5);
+          cheek.position.set(x, eyeY - 0.16, eyeZ - 0.06);
+          headGroup.add(cheek);
+        });
+      }
+
+      if (type === "haru") {
+        // 1. 하루 (3D 후드티 + 헤드셋 쓴 단짝 친구)
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.78, 1.15, 24), mat(0x38bdf8));
+        body.position.y = -1.05;
+        group.add(body);
+
+        // 후드 목 칼라
+        const collar = new THREE.Mesh(new THREE.TorusGeometry(0.46, 0.13, 16, 28), mat(0x0284c7));
+        collar.rotation.x = Math.PI / 2.2;
+        collar.position.y = -0.48;
+        group.add(collar);
+
+        // 양팔
+        [-0.72, 0.72].forEach((x, idx) => {
+          const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.18, 0.75, 16), mat(0x38bdf8));
+          arm.position.set(x, -1.05, 0.05);
+          arm.rotation.z = idx === 0 ? 0.35 : -0.55;
+          const hand = new THREE.Mesh(new THREE.SphereGeometry(0.17, 16, 16), mat(0xffdbac));
+          hand.position.set(idx === 0 ? -0.88 : 0.96, idx === 0 ? -1.4 : -0.75, 0.12);
+          group.add(arm, hand);
+        });
+
+        const headGroup = new THREE.Group();
+        headGroup.position.y = 0.25;
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.82, 32, 32), mat(0xffdbac));
+        headGroup.add(head);
+
+        // 3D 헤어스타일
+        const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.86, 32, 32, 0, Math.PI * 2, 0, Math.PI * 0.58), mat(0x332219));
+        hairTop.rotation.x = -0.18;
+        headGroup.add(hairTop);
+
+        // 헤드셋
+        const band = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.06, 12, 32, Math.PI), mat(0x1e293b));
+        headGroup.add(band);
+        [-0.88, 0.88].forEach(x => {
+          const pad = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.16, 20), mat(0x0ea5e9));
+          pad.rotation.z = Math.PI / 2;
+          pad.position.set(x, 0.02, 0);
+          headGroup.add(pad);
+        });
+
+        addCuteFace(headGroup, -0.04, 0.76);
+        group.add(headGroup);
+        group.userData.head = headGroup;
+
+      } else if (type === "teacher") {
+        // 2. 선생님 (3D 민트 가디건 + 동그란 금테 안경)
+        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.54, 0.78, 1.15, 24), mat(0x34d399));
+        body.position.y = -1.05;
+        group.add(body);
+
+        const shirt = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.65, 16), mat(0xffffff));
+        shirt.rotation.x = Math.PI;
+        shirt.position.set(0, -0.75, 0.42);
+        group.add(shirt);
+
+        [-0.72, 0.72].forEach((x, idx) => {
+          const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.17, 0.75, 16), mat(0x34d399));
+          arm.position.set(x, -1.08, 0.05);
+          arm.rotation.z = idx === 0 ? 0.28 : -0.28;
+          group.add(arm);
+        });
+
+        const headGroup = new THREE.Group();
+        headGroup.position.y = 0.25;
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.8, 32, 32), mat(0xffe0bd));
+        headGroup.add(head);
+
+        // 차분한 헤어 & 뒷머리
+        const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.85, 32, 32, 0, Math.PI * 2, 0, Math.PI * 0.56), mat(0x4a3228));
+        hairTop.rotation.x = -0.15;
+        const hairBack = new THREE.Mesh(new THREE.CylinderGeometry(0.82, 0.88, 0.9, 24), mat(0x4a3228));
+        hairBack.position.set(0, -0.35, -0.18);
+        headGroup.add(hairTop, hairBack);
+
+        // 동그란 3D 안경
+        [-0.31, 0.31].forEach(x => {
+          const rim = new THREE.Mesh(new THREE.TorusGeometry(0.21, 0.025, 12, 24), mat(0xb45309, 0.2));
+          rim.position.set(x, -0.04, 0.79);
+          headGroup.add(rim);
+        });
+        const bridge = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.22, 8), mat(0xb45309, 0.2));
+        bridge.rotation.z = Math.PI / 2;
+        bridge.position.set(0, -0.04, 0.8);
+        headGroup.add(bridge);
+
+        addCuteFace(headGroup, -0.04, 0.74, 0xffab91);
+        group.add(headGroup);
+        group.userData.head = headGroup;
+
+      } else if (type === "bambi") {
+        // 3. 밤비 (3D 말랑한 강아지 + 주황 스카프)
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.72, 28, 28), mat(0xfbbf24));
+        body.scale.set(0.95, 1.15, 0.88);
+        body.position.y = -1.05;
+        group.add(body);
+
+        // 배 하얀 털
+        const belly = new THREE.Mesh(new THREE.SphereGeometry(0.52, 24, 24), mat(0xfef3c7));
+        belly.position.set(0, -1.05, 0.35);
+        group.add(belly);
+
+        // 스카프
+        const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.52, 0.12, 16, 28), mat(0xf97316));
+        scarf.rotation.x = Math.PI / 2;
+        scarf.position.y = -0.46;
+        group.add(scarf);
+
+        // 앞발
+        [-0.45, 0.45].forEach(x => {
+          const paw = new THREE.Mesh(new THREE.SphereGeometry(0.22, 18, 18), mat(0xfbbf24));
+          paw.position.set(x, -1.35, 0.52);
+          group.add(paw);
+        });
+
+        const headGroup = new THREE.Group();
+        headGroup.position.y = 0.25;
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.84, 32, 32), mat(0xfbbf24));
+        headGroup.add(head);
+
+        // 입 주변 주둥이 & 코
+        const snout = new THREE.Mesh(new THREE.SphereGeometry(0.36, 24, 24), mat(0xfef3c7));
+        snout.scale.set(1.15, 0.85, 0.9);
+        snout.position.set(0, -0.2, 0.72);
+        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 16), mat(0x291d18, 0.2));
+        nose.position.set(0, -0.08, 0.98);
+        headGroup.add(snout, nose);
+
+        // 축 처진 강아지 귀 2개
+        [-0.84, 0.84].forEach((x, idx) => {
+          const ear = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 20), mat(0xd97706));
+          ear.scale.set(0.65, 1.5, 0.75);
+          ear.position.set(x, -0.05, 0);
+          ear.rotation.z = idx === 0 ? 0.28 : -0.28;
+          headGroup.add(ear);
+        });
+
+        addCuteFace(headGroup, 0.06, 0.76);
+        group.add(headGroup);
+        group.userData.head = headGroup;
+
+      } else if (type === "luna") {
+        // 4. 루나 (3D 보라빛 달빛 고양이 + 골드 리본)
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.68, 28, 28), mat(0xc084fc));
+        body.scale.set(0.92, 1.15, 0.86);
+        body.position.y = -1.05;
+        group.add(body);
+
+        const chest = new THREE.Mesh(new THREE.SphereGeometry(0.46, 24, 24), mat(0xfaf5ff));
+        chest.position.set(0, -1.05, 0.34);
+        group.add(chest);
+
+        // 목 리본
+        const ribbon = new THREE.Mesh(new THREE.TorusGeometry(0.48, 0.09, 14, 28), mat(0xfacc15, 0.3));
+        ribbon.rotation.x = Math.PI / 2;
+        ribbon.position.y = -0.46;
+        group.add(ribbon);
+
+        [-0.42, 0.42].forEach(x => {
+          const paw = new THREE.Mesh(new THREE.SphereGeometry(0.2, 18, 18), mat(0xfaf5ff));
+          paw.position.set(x, -1.35, 0.5);
+          group.add(paw);
+        });
+
+        const headGroup = new THREE.Group();
+        headGroup.position.y = 0.25;
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.84, 32, 32), mat(0xc084fc));
+        head.scale.set(1.05, 0.95, 0.96);
+        headGroup.add(head);
+
+        // 뾰족한 고양이 귀 2개
+        [-0.54, 0.54].forEach((x, idx) => {
+          const ear = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.58, 20), mat(0xa855f7));
+          ear.position.set(x, 0.78, 0);
+          ear.rotation.z = idx === 0 ? 0.32 : -0.32;
+          const innerEar = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.38, 16), mat(0xf472b6));
+          innerEar.position.set(x, 0.74, 0.08);
+          innerEar.rotation.z = idx === 0 ? 0.32 : -0.32;
+          headGroup.add(ear, innerEar);
+        });
+
+        // 고양이 코 & 수염
+        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.08, 14, 14), mat(0xf472b6));
+        nose.position.set(0, -0.1, 0.82);
+        headGroup.add(nose);
+
+        [-1, 1].forEach(dir => {
+          [-0.08, -0.18].forEach(y => {
+            const whisker = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.42, 8), mat(0xffffff));
+            whisker.rotation.z = Math.PI / 2 + (y * dir * 0.4);
+            whisker.position.set(dir * 0.78, y, 0.55);
+            headGroup.add(whisker);
+          });
+        });
+
+        addCuteFace(headGroup, 0.02, 0.76, 0xf472b6);
+        group.add(headGroup);
+        group.userData.head = headGroup;
+      }
+
+      return group;
+    }
+
+    // 선택 화면 카드용 미니 3D 프리뷰 렌더러
+    function renderCardPreviews() {
+      ["haru", "teacher", "bambi", "luna"].forEach(type => {
+        const container = document.getElementById(`preview-${type}`);
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+        camera.position.set(0, -0.15, 4.3);
+
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        renderer.setSize(118, 118);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.78));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.65);
+        dirLight.position.set(3, 5, 5);
+        scene.add(dirLight);
+
+        const mesh = build3DCharacterMesh(type);
+        mesh.rotation.y = 0.22;
+        scene.add(mesh);
+
+        function animatePreview() {
+          requestAnimationFrame(animatePreview);
+          mesh.rotation.y = Math.sin(Date.now() * 0.002) * 0.25;
+          mesh.position.y = Math.sin(Date.now() * 0.003) * 0.05;
+          renderer.render(scene, camera);
+        }
+        animatePreview();
+      });
+    }
+
+    // 메인 채팅창 3D 무대 관리
+    let mainScene, mainCamera, mainRenderer, activeMesh;
+    let targetRotY = 0, targetRotX = 0;
+    let isDragging = false, prevMouseX = 0;
+    let isThinkingAnim = false;
+
+    function initMain3DStage(charKey) {
+      const container = document.getElementById("threeCanvasContainer");
+      container.innerHTML = "";
+
+      const width = container.clientWidth || 450;
+      const height = container.clientHeight || 210;
+
+      mainScene = new THREE.Scene();
+      mainCamera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
+      mainCamera.position.set(0, -0.22, 4.35);
+
+      mainRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+      mainRenderer.setSize(width, height);
+      mainRenderer.setPixelRatio(window.devicePixelRatio);
+      container.appendChild(mainRenderer.domElement);
+
+      mainScene.add(new THREE.AmbientLight(0xffffff, 0.8));
+      const keyLight = new THREE.DirectionalLight(0xffffff, 0.7);
+      keyLight.position.set(4, 6, 6);
+      const rimLight = new THREE.DirectionalLight(0xe0e7ff, 0.35);
+      rimLight.position.set(-4, 2, -3);
+      mainScene.add(keyLight, rimLight);
+
+      activeMesh = build3DCharacterMesh(charKey);
+      mainScene.add(activeMesh);
+
+      // 마우스/터치 시선 추적 및 360도 드래그 회전 이벤트
+      const wrapper = document.getElementById("stageWrapper");
+      wrapper.onmousedown = e => { isDragging = true; prevMouseX = e.clientX; };
+      window.onmouseup = () => { isDragging = false; };
+      wrapper.onmousemove = e => {
+        if (isDragging) {
+          targetRotY += (e.clientX - prevMouseX) * 0.015;
+          prevMouseX = e.clientX;
+        } else {
+          const rect = wrapper.getBoundingClientRect();
+          const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+          const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+          targetRotY = nx * 0.45;
+          targetRotX = ny * 0.18;
+        }
+      };
+
+      wrapper.ontouchstart = e => { isDragging = true; prevMouseX = e.touches[0].clientX; };
+      wrapper.ontouchend = () => { isDragging = false; };
+      wrapper.ontouchmove = e => {
+        if (isDragging && e.touches[0]) {
+          targetRotY += (e.touches[0].clientX - prevMouseX) * 0.018;
+          prevMouseX = e.touches[0].clientX;
+        }
+      };
+
+      function animateMain() {
+        if (!activeMesh) return;
+        requestAnimationFrame(animateMain);
+
+        const t = Date.now() * 0.003;
+        // 부드러운 회전 추적
+        activeMesh.rotation.y += (targetRotY - activeMesh.rotation.y) * 0.08;
+        if (activeMesh.userData.head) {
+          activeMesh.userData.head.rotation.x += (targetRotX - activeMesh.userData.head.rotation.x) * 0.08;
+        }
+
+        // 숨쉬기 & 답장 생각할 때 통통 튀는 3D 모션
+        if (isThinkingAnim) {
+          activeMesh.position.y = Math.abs(Math.sin(t * 2.4)) * 0.16;
+          if (activeMesh.userData.head) {
+            activeMesh.userData.head.rotation.z = Math.sin(t * 2.4) * 0.12;
+          }
+        } else {
+          activeMesh.position.y = Math.sin(t) * 0.05;
+          if (activeMesh.userData.head) {
+            activeMesh.userData.head.rotation.z *= 0.9;
+          }
+        }
+
+        mainRenderer.render(mainScene, mainCamera);
+      }
+      animateMain();
+    }
+
+    window.onload = () => {
+      renderCardPreviews();
+    };
+
+    // ================= 채팅 & RAG 상담 매뉴얼 로직 =================
     let currentChar = null;
     let isTyping = false;
 
     function selectCharacter(charKey) {
       currentChar = characters[charKey];
+      targetRotY = 0;
+      targetRotX = 0;
+
       document.getElementById("selectScreen").style.display = "none";
       document.getElementById("chatScreen").style.display = "flex";
 
-      // 상단 바 & 상반신 스테이지 세팅
       document.getElementById("topBar").style.background = currentChar.themeColor;
       document.getElementById("sendBtn").style.background = currentChar.themeColor;
       document.getElementById("headerName").innerText = currentChar.name;
       document.getElementById("headerRole").innerText = currentChar.role;
-      document.getElementById("charStage").style.background = currentChar.stageBg;
-      document.getElementById("standingChar").innerHTML = currentChar.svg;
+      document.getElementById("stageWrapper").style.background = currentChar.stageBg;
+
+      initMain3DStage(charKey);
 
       const chatBox = document.getElementById("chatBox");
       chatBox.innerHTML = "";
@@ -455,6 +665,7 @@
 
     function goBack() {
       if (isTyping) return;
+      activeMesh = null;
       document.getElementById("chatScreen").style.display = "none";
       document.getElementById("selectScreen").style.display = "flex";
     }
@@ -473,7 +684,7 @@
     }
 
     function getRagResponse(text) {
-      // Level 3: 긴급 위기 키워드 감지 (모든 캐릭터 공통 안전장치 작동)
+      // Level 3: 긴급 위기 키워드 감지 (모든 캐릭터 공통 안전장치)
       const dangerWords = ["죽고", "사라지고", "자해", "끝내고", "살기 싫", "자살"];
       if (dangerWords.some(w => text.includes(w))) {
         return {
@@ -483,22 +694,18 @@
         };
       }
 
-      // 학업/진로 매뉴얼 검색
       if (["시험", "성적", "공부", "진로", "대학", "불안", "모의고사", "숙제", "학원"].some(w => text.includes(w))) {
         return { tag: "학업·진로 매뉴얼 · Level 1", isDanger: false, reply: currentChar.manual.study };
       }
 
-      // 대인관계 매뉴얼 검색
       if (["친구", "따돌림", "단톡", "싸웠", "외톨이", "관계", "손절", "애들", "반에서"].some(w => text.includes(w))) {
         return { tag: "대인관계 매뉴얼 · Level 2", isDanger: false, reply: currentChar.manual.friend };
       }
 
-      // 가족 갈등 매뉴얼 검색
       if (["부모님", "엄마", "아빠", "집", "가족", "잔소리", "동생", "언니", "오빠", "형"].some(w => text.includes(w))) {
         return { tag: "가족 갈등 매뉴얼 · Level 2", isDanger: false, reply: currentChar.manual.family };
       }
 
-      // 기본 공감 응답 랜덤 선택
       const randomFallback = currentChar.fallback[Math.floor(Math.random() * currentChar.fallback.length)];
       return { tag: "정서 공감 매뉴얼 · Level 1", isDanger: false, reply: randomFallback };
     }
@@ -514,12 +721,10 @@
 
     function showTypingAndReply(replyHtml, tagText, isDanger) {
       isTyping = true;
+      isThinkingAnim = true;
       document.getElementById("sendBtn").disabled = true;
 
-      // 캐릭터 상태 표시 변경 & 고개 끄덕이며 생각하는 모션 시작
-      const standingChar = document.getElementById("standingChar");
       const statusPill = document.getElementById("statusPill");
-      standingChar.classList.add("thinking");
       statusPill.innerText = `✍️ ${currentChar.name}가 답장 적는 중...`;
       statusPill.style.color = currentChar.themeColor;
 
@@ -542,10 +747,9 @@
         const indicator = document.getElementById("typingIndicator");
         if (indicator) indicator.remove();
 
-        // 모션 복귀
-        standingChar.classList.remove("thinking");
+        isThinkingAnim = false;
         statusPill.innerText = "● 이야기 듣는 중";
-        statusPill.style.color = "#555";
+        statusPill.style.color = "#334155";
 
         const botRow = document.createElement("div");
         botRow.className = "msg-row bot-row";
