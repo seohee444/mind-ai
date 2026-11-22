@@ -341,55 +341,35 @@
       }
     };
 
-    // ================= 스튜디오 렌더링 & 3D 클레이 캐릭터 엔진 =================
-    function setupStudioRenderer(canvasContainer, width, height) {
+    // ================= 밝고 화사한 3D 클레이 캐릭터 엔진 =================
+    function setupBrightRenderer(canvasContainer, width, height) {
       const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
       renderer.setSize(width, height);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.shadowMap.enabled = true;
-      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.08;
       canvasContainer.appendChild(renderer.domElement);
       return renderer;
     }
 
-    function setupStudioLights(scene) {
-      // 뽀얗고 입체적인 피규어 쉐이딩을 위한 돔 라이트(Hemisphere) + 소프트 키 라이트
-      const hemiLight = new THREE.HemisphereLight(0xffffff, 0xf1f5f9, 0.78);
-      hemiLight.position.set(0, 10, 0);
-      scene.add(hemiLight);
+    function setupBrightLights(scene) {
+      // 어두워지지 않도록 전체적으로 화사하고 균일한 스튜디오 조명 배치
+      const ambient = new THREE.AmbientLight(0xffffff, 0.88);
+      scene.add(ambient);
 
-      const keyLight = new THREE.DirectionalLight(0xfffcf5, 0.55);
-      keyLight.position.set(3.5, 6, 5);
-      keyLight.castShadow = true;
-      keyLight.shadow.mapSize.width = 1024;
-      keyLight.shadow.mapSize.height = 1024;
-      keyLight.shadow.bias = -0.0005;
-      scene.add(keyLight);
+      const frontKey = new THREE.DirectionalLight(0xffffff, 0.48);
+      frontKey.position.set(2.5, 4.5, 6);
+      scene.add(frontKey);
 
-      const rimLight = new THREE.DirectionalLight(0xe0e7ff, 0.35);
-      rimLight.position.set(-4, 3, -4);
-      scene.add(rimLight);
+      const leftFill = new THREE.DirectionalLight(0xf8fafc, 0.28);
+      leftFill.position.set(-4, 2, 4);
+      scene.add(leftFill);
     }
 
     function build3DCharacterMesh(type) {
       const group = new THREE.Group();
-      // 보송보송하고 부드러운 클레이(고무/무광) 재질
-      const clay = (color, rough = 0.65, metal = 0.0) =>
-        new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal });
+      const clay = (color, rough = 0.55) =>
+        new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: 0.0 });
 
-      // 그림자 설정 헬퍼
-      function enableShadows(obj) {
-        obj.traverse(child => {
-          if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-          }
-        });
-      }
-
-      // 둥근 캡슐형 팔다리 생성 헬퍼 (단차 없이 매끈한 연결)
+      // 둥근 캡슐형 팔 생성 헬퍼
       function makeSmoothLimb(radius, length, mat) {
         const limbGroup = new THREE.Group();
         const cyl = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, length, 24), mat);
@@ -401,12 +381,12 @@
         return limbGroup;
       }
 
-      // 클레이 일러스트 얼굴 생성 (오밀조밀한 눈, 짧은 눈썹, 둥근 귀, 도톰한 입술)
+      // 클레이 일러스트 얼굴 (오밀조밀한 눈, 짧은 눈썹, 둥근 귀, 도톰한 입술)
       function addClayFace(headGroup, eyeY, eyeZ, skinColor, isAnimal = false) {
         const scleraGeo = new THREE.SphereGeometry(0.145, 32, 32);
-        const scleraMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+        const scleraMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25 });
         const pupilGeo = new THREE.SphereGeometry(0.088, 24, 24);
-        const pupilMat = new THREE.MeshStandardMaterial({ color: 0x231f20, roughness: 0.2 });
+        const pupilMat = new THREE.MeshStandardMaterial({ color: 0x231f20, roughness: 0.15 });
 
         [-0.2, 0.2].forEach((x, idx) => {
           const sclera = new THREE.Mesh(scleraGeo, scleraMat);
@@ -420,7 +400,6 @@
           headGroup.add(sclera, pupil);
 
           if (!isAnimal) {
-            // 둥근 끝처리를 가진 짧은 아치형 눈썹
             const brow = makeSmoothLimb(0.016, 0.08, clay(0x4a3228));
             brow.position.set(x, eyeY + 0.16, eyeZ + 0.02);
             brow.rotation.z = Math.PI / 2 + (idx === 0 ? -0.15 : 0.15);
@@ -428,9 +407,9 @@
           }
         });
 
-        // 양볼 은은한 핑크 홍조
+        // 양볼 은은한 복숭아빛 홍조
         const cheekGeo = new THREE.SphereGeometry(0.14, 24, 24);
-        const cheekMat = new THREE.MeshBasicMaterial({ color: 0xff8a80, transparent: true, opacity: 0.34 });
+        const cheekMat = new THREE.MeshBasicMaterial({ color: 0xff8a80, transparent: true, opacity: 0.35 });
         [-0.38, 0.38].forEach(x => {
           const cheek = new THREE.Mesh(cheekGeo, cheekMat);
           cheek.scale.set(1.25, 0.75, 0.3);
@@ -440,14 +419,14 @@
 
         if (!isAnimal) {
           // 작고 도톰한 살구빛 입술
-          const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.072, 24, 24), clay(0xd96b66, 0.55));
+          const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.072, 24, 24), clay(0xd96b66, 0.45));
           mouth.scale.set(1.38, 0.56, 0.5);
           mouth.position.set(0, eyeY - 0.19, eyeZ + 0.04);
           headGroup.add(mouth);
 
-          // 통통하고 둥근 귀 + 귓바퀴 음영
-          [-0.77, 0.77].forEach(x => {
-            const ear = new THREE.Mesh(new THREE.SphereGeometry(0.19, 28, 28), clay(skinColor));
+          // 통통하고 둥근 귀
+          [-0.76, 0.76].forEach(x => {
+            const ear = new THREE.Mesh(new THREE.SphereGeometry(0.18, 28, 28), clay(skinColor));
             ear.scale.set(0.62, 1.05, 0.75);
             ear.position.set(x, eyeY - 0.03, -0.04);
             headGroup.add(ear);
@@ -456,57 +435,57 @@
       }
 
       if (type === "teacher") {
-        // 1. 선생님 (첨부 이미지 재현: 다크브라운 베레모 + 동그란 안경 + 웨이브 헤어 + 네이비 베스트 + 초록 책 & 지휘봉)
+        // 1. 선생님 (베레모 + 동그란 안경 + 네이비 베스트 + 초록 책 & 지휘봉)
         const skinColor = 0xffdfc4;
 
-        // 둥글고 매끈한 상체
-        const torso = new THREE.Mesh(new THREE.SphereGeometry(0.54, 36, 36), clay(0x1e3a8a));
-        torso.scale.set(0.95, 1.35, 0.85);
+        // 몸통 (반지름 0.5 -> X: ±0.5, Z: ±0.43)
+        const torso = new THREE.Mesh(new THREE.SphereGeometry(0.52, 36, 36), clay(0x1e3a8a));
+        torso.scale.set(0.95, 1.35, 0.84);
         torso.position.set(0, -1.16, 0);
 
-        const collar = new THREE.Mesh(new THREE.SphereGeometry(0.28, 24, 24), clay(0xffffff));
+        const collar = new THREE.Mesh(new THREE.SphereGeometry(0.27, 24, 24), clay(0xffffff));
         collar.scale.set(1.1, 0.55, 0.85);
         collar.position.set(0, -0.66, 0.12);
         group.add(torso, collar);
 
-        // 둥근 캡슐 팔 (단차 없음)
-        const leftArm = makeSmoothLimb(0.14, 0.42, clay(0xffffff));
-        leftArm.position.set(-0.56, -1.04, 0.16);
-        leftArm.rotation.z = -0.38;
+        // ★ 팔과 몸통 간격 해결: 어깨(±0.44)에서 자연스럽게 밀착되어 뻗어나오도록 배치
+        const leftArm = makeSmoothLimb(0.135, 0.42, clay(0xffffff));
+        leftArm.position.set(-0.46, -0.96, 0.14);
+        leftArm.rotation.z = -0.36;
         leftArm.rotation.x = -0.35;
 
-        const rightArm = makeSmoothLimb(0.14, 0.42, clay(0xffffff));
-        rightArm.position.set(0.5, -1.12, 0.2);
-        rightArm.rotation.z = 0.48;
+        const rightArm = makeSmoothLimb(0.135, 0.42, clay(0xffffff));
+        rightArm.position.set(0.42, -1.04, 0.18);
+        rightArm.rotation.z = 0.42;
         rightArm.rotation.x = -0.45;
         group.add(leftArm, rightArm);
 
-        // 통통한 피규어 손
-        const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.18, 28, 28), clay(skinColor));
-        leftHand.position.set(-0.68, -0.82, 0.34);
-        const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.18, 28, 28), clay(skinColor));
-        rightHand.position.set(0.24, -1.18, 0.46);
+        // 손 위치 (팔 끝과 정확히 연결)
+        const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.175, 28, 28), clay(skinColor));
+        leftHand.position.set(-0.56, -0.76, 0.3);
+        const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.175, 28, 28), clay(skinColor));
+        rightHand.position.set(0.24, -1.12, 0.56);
         group.add(leftHand, rightHand);
 
         // 끝이 하얀 지휘봉
         const stick = makeSmoothLimb(0.022, 0.95, clay(0x3e2723));
-        stick.position.set(-0.73, -0.46, 0.4);
+        stick.position.set(-0.61, -0.4, 0.36);
         stick.rotation.z = 0.14;
         const stickTip = makeSmoothLimb(0.021, 0.24, clay(0xffffff));
-        stickTip.position.set(-0.79, 0.02, 0.4);
+        stickTip.position.set(-0.67, 0.08, 0.36);
         stickTip.rotation.z = 0.14;
         group.add(stick, stickTip);
 
-        // 초록색 다이어리 책 + 노란 책갈피
+        // ★ 책이 몸통을 통과하지 않도록 몸통 앞쪽 바깥(z: 0.52)에 배치
         const bookGroup = new THREE.Group();
-        bookGroup.position.set(0.14, -1.08, 0.4);
+        bookGroup.position.set(0.12, -1.06, 0.52);
         bookGroup.rotation.z = -0.14;
-        bookGroup.rotation.y = -0.25;
-        const bookCover = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.6, 0.11), clay(0x22c55e));
-        const bookPages = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.56, 0.08), clay(0xffffff));
+        bookGroup.rotation.y = -0.2;
+        const bookCover = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.58, 0.11), clay(0x22c55e));
+        const bookPages = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.54, 0.08), clay(0xffffff));
         bookPages.position.set(-0.025, 0, 0);
         const bookmark = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.12), clay(0xfacc15));
-        bookmark.position.set(0.11, 0.24, 0);
+        bookmark.position.set(0.11, 0.23, 0);
         bookGroup.add(bookCover, bookPages, bookmark);
         group.add(bookGroup);
 
@@ -518,34 +497,33 @@
         head.scale.set(1.02, 0.96, 0.96);
         headGroup.add(head);
 
-        // 구레나룻 & 부드러운 웨이브 뒷머리
+        // ★ 깔끔하게 정돈된 갈색 뒷머리 & 웨이브 (겹침 오류 제거)
         const hairMat = clay(0x7c5842);
-        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.8, 48, 48, 0, Math.PI * 2, 0, Math.PI * 0.65), hairMat);
-        hairBack.rotation.x = -0.5;
-        hairBack.position.set(0, 0.02, -0.09);
+        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.79, 48, 48, 0, Math.PI * 2, 0, Math.PI * 0.58), hairMat);
+        hairBack.rotation.x = -0.62;
+        hairBack.position.set(0, 0.02, -0.06);
 
-        const wave1 = new THREE.Mesh(new THREE.SphereGeometry(0.42, 32, 32), hairMat);
-        wave1.scale.set(1.05, 1.15, 0.95);
-        wave1.position.set(0.32, -0.52, -0.44);
-        const wave2 = new THREE.Mesh(new THREE.SphereGeometry(0.36, 32, 32), hairMat);
-        wave2.position.set(0.38, -0.88, -0.42);
-        headGroup.add(hairBack, wave1, wave2);
+        const ponyTail = new THREE.Mesh(new THREE.SphereGeometry(0.38, 32, 32), hairMat);
+        ponyTail.scale.set(0.95, 1.35, 0.85);
+        ponyTail.position.set(0.28, -0.58, -0.46);
+        ponyTail.rotation.z = 0.18;
+        headGroup.add(hairBack, ponyTail);
 
-        // 다크브라운 빵모자(베레모) + 꼭지
+        // 다크브라운 베레모 + 꼭지
         const beretMat = clay(0x36241c);
-        const beret = new THREE.Mesh(new THREE.SphereGeometry(0.86, 48, 36), beretMat);
-        beret.scale.set(1.12, 0.46, 1.12);
+        const beret = new THREE.Mesh(new THREE.SphereGeometry(0.85, 48, 36), beretMat);
+        beret.scale.set(1.12, 0.45, 1.12);
         beret.position.set(0.04, 0.56, -0.02);
         beret.rotation.z = -0.14;
         beret.rotation.x = 0.12;
 
         const beretStem = makeSmoothLimb(0.038, 0.1, beretMat);
-        beretStem.position.set(0.08, 0.96, -0.05);
+        beretStem.position.set(0.08, 0.95, -0.05);
         beretStem.rotation.z = -0.14;
         headGroup.add(beret, beretStem);
 
         // 얇고 깔끔한 원형 안경
-        const rimMat = clay(0x291d18, 0.4);
+        const rimMat = clay(0x291d18);
         [-0.2, 0.2].forEach(x => {
           const rim = new THREE.Mesh(new THREE.TorusGeometry(0.175, 0.014, 16, 40), rimMat);
           rim.position.set(x, -0.04, 0.78);
@@ -561,40 +539,41 @@
         group.userData.head = headGroup;
 
       } else if (type === "haru") {
-        // 2. 하루 (동일한 소프트 3D 클레이 스타일: 스카이블루 볼캡 + 후드티 + 연필)
+        // 2. 하루 (스카이블루 볼캡 + 후드티 + 밀착된 팔 + 연필)
         const skinColor = 0xffe2c8;
 
-        const torso = new THREE.Mesh(new THREE.SphereGeometry(0.55, 36, 36), clay(0x38bdf8));
-        torso.scale.set(0.96, 1.35, 0.86);
+        const torso = new THREE.Mesh(new THREE.SphereGeometry(0.53, 36, 36), clay(0x38bdf8));
+        torso.scale.set(0.95, 1.35, 0.85);
         torso.position.set(0, -1.16, 0);
 
-        const hood = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.11, 20, 36), clay(0x0284c7));
+        const hood = new THREE.Mesh(new THREE.TorusGeometry(0.41, 0.11, 20, 36), clay(0x0284c7));
         hood.rotation.x = Math.PI / 2.1;
         hood.position.set(0, -0.68, -0.02);
         group.add(torso, hood);
 
-        const leftArm = makeSmoothLimb(0.14, 0.42, clay(0x38bdf8));
-        leftArm.position.set(-0.56, -1.04, 0.16);
-        leftArm.rotation.z = -0.38;
+        // ★ 팔과 몸통 밀착 배치
+        const leftArm = makeSmoothLimb(0.135, 0.42, clay(0x38bdf8));
+        leftArm.position.set(-0.46, -0.96, 0.14);
+        leftArm.rotation.z = -0.36;
         leftArm.rotation.x = -0.35;
 
-        const rightArm = makeSmoothLimb(0.14, 0.42, clay(0x38bdf8));
-        rightArm.position.set(0.56, -1.14, 0.12);
-        rightArm.rotation.z = 0.35;
+        const rightArm = makeSmoothLimb(0.135, 0.42, clay(0x38bdf8));
+        rightArm.position.set(0.46, -1.06, 0.1);
+        rightArm.rotation.z = 0.24;
         group.add(leftArm, rightArm);
 
-        const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.18, 28, 28), clay(skinColor));
-        leftHand.position.set(-0.68, -0.82, 0.34);
-        const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.18, 28, 28), clay(skinColor));
-        rightHand.position.set(0.64, -1.36, 0.18);
+        const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.175, 28, 28), clay(skinColor));
+        leftHand.position.set(-0.56, -0.76, 0.3);
+        const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.175, 28, 28), clay(skinColor));
+        rightHand.position.set(0.52, -1.28, 0.14);
         group.add(leftHand, rightHand);
 
         // 노란 연필 소품
         const pencil = makeSmoothLimb(0.032, 0.78, clay(0xfacc15));
-        pencil.position.set(-0.72, -0.54, 0.38);
+        pencil.position.set(-0.6, -0.48, 0.34);
         pencil.rotation.z = 0.16;
         const pencilTip = new THREE.Mesh(new THREE.ConeGeometry(0.032, 0.12, 16), clay(0xfde68a));
-        pencilTip.position.set(-0.78, -0.1, 0.38);
+        pencilTip.position.set(-0.66, -0.04, 0.34);
         pencilTip.rotation.z = 0.16;
         group.add(pencil, pencilTip);
 
@@ -605,14 +584,15 @@
         head.scale.set(1.02, 0.96, 0.96);
         headGroup.add(head);
 
+        // ★ 깔끔한 다크브라운 뒷머리
         const hairMat = clay(0x3b2f2f);
-        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.81, 48, 48, 0, Math.PI * 2, 0, Math.PI * 0.6), hairMat);
-        hairBack.rotation.x = -0.55;
-        hairBack.position.set(0, 0.04, -0.08);
+        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.79, 48, 48, 0, Math.PI * 2, 0, Math.PI * 0.56), hairMat);
+        hairBack.rotation.x = -0.68;
+        hairBack.position.set(0, 0.04, -0.05);
         headGroup.add(hairBack);
 
         // 스카이블루 & 화이트 볼캡
-        const capCrown = new THREE.Mesh(new THREE.SphereGeometry(0.82, 48, 36, 0, Math.PI * 2, 0, Math.PI * 0.5), clay(0x0ea5e9));
+        const capCrown = new THREE.Mesh(new THREE.SphereGeometry(0.81, 48, 36, 0, Math.PI * 2, 0, Math.PI * 0.5), clay(0x0ea5e9));
         capCrown.position.set(0, 0.16, 0);
         capCrown.rotation.x = -0.15;
 
@@ -626,24 +606,25 @@
         group.userData.head = headGroup;
 
       } else if (type === "bambi") {
-        // 3. 밤비 (소프트 클레이 아기 강아지)
+        // 3. 밤비 (아기 강아지: 자연스럽게 내려오는 강아지 귀 + 몸에 밀착된 앞발)
         const furMain = clay(0xfcd34d);
         const furCream = clay(0xfffbeb);
 
-        const body = new THREE.Mesh(new THREE.SphereGeometry(0.54, 36, 36), furMain);
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.52, 36, 36), furMain);
         body.scale.set(0.95, 1.32, 0.86);
         body.position.set(0, -1.16, 0);
-        const belly = new THREE.Mesh(new THREE.SphereGeometry(0.4, 28, 28), furCream);
+        const belly = new THREE.Mesh(new THREE.SphereGeometry(0.39, 28, 28), furCream);
         belly.position.set(0, -1.16, 0.26);
 
-        const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.09, 20, 36), clay(0xf97316));
+        const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.41, 0.085, 20, 36), clay(0xf97316));
         scarf.rotation.x = Math.PI / 2.05;
         scarf.position.y = -0.68;
         group.add(body, belly, scarf);
 
-        [-0.48, 0.48].forEach(x => {
-          const paw = new THREE.Mesh(new THREE.SphereGeometry(0.18, 28, 28), furCream);
-          paw.position.set(x, -1.24, 0.34);
+        // ★ 몸통 옆면에 딱 붙은 앙증맞은 앞발
+        [-0.4, 0.4].forEach(x => {
+          const paw = new THREE.Mesh(new THREE.SphereGeometry(0.17, 28, 28), furCream);
+          paw.position.set(x, -1.18, 0.32);
           group.add(paw);
         });
 
@@ -657,16 +638,17 @@
         const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.28, 32, 32), furCream);
         muzzle.scale.set(1.25, 0.82, 0.75);
         muzzle.position.set(0, -0.17, 0.68);
-        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.075, 20, 20), clay(0x3e2723, 0.35));
+        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.075, 20, 20), clay(0x3e2723));
         nose.scale.set(1.2, 0.85, 0.8);
         nose.position.set(0, -0.09, 0.88);
         headGroup.add(muzzle, nose);
 
-        [-0.78, 0.78].forEach((x, idx) => {
+        // ★ 강아지 귀 방향 수정: 위쪽 머리 옆에서 바깥쪽 아래로 자연스럽게 늘어지는 귀
+        [-0.82, 0.82].forEach((x, idx) => {
           const ear = new THREE.Mesh(new THREE.SphereGeometry(0.26, 28, 28), clay(0xd97706));
-          ear.scale.set(0.62, 1.3, 0.72);
-          ear.position.set(x, 0.1, 0.02);
-          ear.rotation.z = idx === 0 ? 0.35 : -0.35;
+          ear.scale.set(0.58, 1.35, 0.75);
+          ear.position.set(x, 0.02, 0.02);
+          ear.rotation.z = idx === 0 ? -0.26 : 0.26; // 바깥쪽으로 자연스럽게 벌어짐
           headGroup.add(ear);
         });
 
@@ -675,26 +657,27 @@
         group.userData.head = headGroup;
 
       } else if (type === "luna") {
-        // 4. 루나 (소프트 클레이 달빛 고양이)
+        // 4. 루나 (달빛 고양이: 몸에 밀착된 앞발)
         const furLavender = clay(0xd8b4fe);
         const furWhite = clay(0xfdf4ff);
 
-        const body = new THREE.Mesh(new THREE.SphereGeometry(0.52, 36, 36), furLavender);
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.5, 36, 36), furLavender);
         body.scale.set(0.95, 1.32, 0.86);
         body.position.set(0, -1.16, 0);
-        const chest = new THREE.Mesh(new THREE.SphereGeometry(0.38, 28, 28), furWhite);
+        const chest = new THREE.Mesh(new THREE.SphereGeometry(0.37, 28, 28), furWhite);
         chest.position.set(0, -1.16, 0.25);
 
-        const choker = new THREE.Mesh(new THREE.TorusGeometry(0.41, 0.065, 20, 36), clay(0xf472b6));
+        const choker = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.065, 20, 36), clay(0xf472b6));
         choker.rotation.x = Math.PI / 2.05;
         choker.position.y = -0.68;
-        const bell = new THREE.Mesh(new THREE.SphereGeometry(0.095, 20, 20), clay(0xfacc15, 0.3, 0.4));
+        const bell = new THREE.Mesh(new THREE.SphereGeometry(0.09, 20, 20), clay(0xfacc15));
         bell.position.set(0, -0.72, 0.42);
         group.add(body, chest, choker, bell);
 
-        [-0.46, 0.46].forEach(x => {
-          const paw = new THREE.Mesh(new THREE.SphereGeometry(0.17, 28, 28), furWhite);
-          paw.position.set(x, -1.24, 0.32);
+        // ★ 몸통에 밀착된 앞발
+        [-0.38, 0.38].forEach(x => {
+          const paw = new THREE.Mesh(new THREE.SphereGeometry(0.16, 28, 28), furWhite);
+          paw.position.set(x, -1.18, 0.3);
           group.add(paw);
         });
 
@@ -734,7 +717,6 @@
         group.userData.head = headGroup;
       }
 
-      enableShadows(group);
       return group;
     }
 
@@ -747,8 +729,8 @@
         const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
         camera.position.set(0, -0.24, 4.75);
 
-        const renderer = setupStudioRenderer(container, 128, 128);
-        setupStudioLights(scene);
+        const renderer = setupBrightRenderer(container, 128, 128);
+        setupBrightLights(scene);
 
         const mesh = build3DCharacterMesh(type);
         scene.add(mesh);
@@ -782,8 +764,8 @@
       mainCamera = new THREE.PerspectiveCamera(34, width / height, 0.1, 100);
       mainCamera.position.set(0, -0.26, 4.7);
 
-      mainRenderer = setupStudioRenderer(container, width, height);
-      setupStudioLights(mainScene);
+      mainRenderer = setupBrightRenderer(container, width, height);
+      setupBrightLights(mainScene);
 
       activeMesh = build3DCharacterMesh(charKey);
       mainScene.add(activeMesh);
