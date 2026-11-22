@@ -391,6 +391,7 @@
       }
 
       if (type === "haru") {
+        // 1. 하루 (파란 후드티 + 헤드셋 + 눈이 보이는 단정한 머리)
         const torso = new THREE.Mesh(new THREE.SphereGeometry(0.68, 32, 32), mat(0x38bdf8));
         torso.scale.set(1.05, 1.15, 0.85);
         torso.position.y = -1.15;
@@ -412,10 +413,22 @@
         const head = new THREE.Mesh(new THREE.SphereGeometry(0.82, 36, 36), mat(0xffdec2));
         headGroup.add(head);
 
-        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.87, 36, 36, 0, Math.PI * 2, 0, Math.PI * 0.62), mat(0x2d2424));
-        hairBack.rotation.x = -0.22;
-        headGroup.add(hairBack);
+        // 머리카락: 뒤쪽으로 젖혀서 이마와 눈이 가려지지 않게 조정
+        const hairMat = mat(0x2d2424);
+        const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.86, 36, 36, 0, Math.PI * 2, 0, Math.PI * 0.56), hairMat);
+        hairCap.rotation.x = -0.45;
+        hairCap.position.set(0, 0.04, -0.08);
+        headGroup.add(hairCap);
 
+        // 눈썹 위쪽에만 살짝 걸치는 귀여운 앞머리 볼륨
+        [-0.22, 0, 0.22].forEach((x, i) => {
+          const bang = new THREE.Mesh(new THREE.SphereGeometry(0.22, 18, 18), hairMat);
+          bang.scale.set(1.1, 0.75, 0.55);
+          bang.position.set(x, 0.42 - Math.abs(i - 1) * 0.03, 0.68);
+          headGroup.add(bang);
+        });
+
+        // 헤드셋
         const band = new THREE.Mesh(new THREE.TorusGeometry(0.91, 0.065, 14, 36, Math.PI), mat(0x1e293b));
         headGroup.add(band);
         [-0.88, 0.88].forEach(x => {
@@ -430,6 +443,7 @@
         group.userData.head = headGroup;
 
       } else if (type === "teacher") {
+        // 2. 선생님 (민트 니트 + 금테 안경 + 가르마가 있는 단정한 헤어)
         const torso = new THREE.Mesh(new THREE.SphereGeometry(0.66, 32, 32), mat(0x34d399));
         torso.scale.set(1.05, 1.15, 0.84);
         torso.position.y = -1.15;
@@ -451,13 +465,30 @@
         const head = new THREE.Mesh(new THREE.SphereGeometry(0.8, 36, 36), mat(0xffe2c6));
         headGroup.add(head);
 
-        const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.85, 36, 36, 0, Math.PI * 2, 0, Math.PI * 0.58), mat(0x4a3228));
-        hairTop.rotation.x = -0.15;
-        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.86, 32, 32), mat(0x4a3228));
-        hairBack.scale.set(1.02, 1.18, 0.85);
-        hairBack.position.set(0, -0.22, -0.2);
-        headGroup.add(hairTop, hairBack);
+        // 머리카락: 뒤로 젖히고 가르마 앞머리로 안경과 눈을 완전히 드러냄
+        const hairMat = mat(0x4a3228);
+        const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.84, 36, 36, 0, Math.PI * 2, 0, Math.PI * 0.54), hairMat);
+        hairTop.rotation.x = -0.48;
+        hairTop.position.set(0, 0.05, -0.08);
 
+        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.85, 32, 32), hairMat);
+        hairBack.scale.set(1.02, 1.18, 0.82);
+        hairBack.position.set(0, -0.22, -0.26);
+
+        // 양옆으로 자연스럽게 넘긴 가르마 앞머리
+        const leftBang = new THREE.Mesh(new THREE.SphereGeometry(0.28, 20, 20), hairMat);
+        leftBang.scale.set(1.2, 0.7, 0.5);
+        leftBang.position.set(-0.28, 0.44, 0.62);
+        leftBang.rotation.z = 0.35;
+
+        const rightBang = new THREE.Mesh(new THREE.SphereGeometry(0.28, 20, 20), hairMat);
+        rightBang.scale.set(1.2, 0.7, 0.5);
+        rightBang.position.set(0.28, 0.44, 0.62);
+        rightBang.rotation.z = -0.35;
+
+        headGroup.add(hairTop, hairBack, leftBang, rightBang);
+
+        // 동그란 금테 안경
         [-0.3, 0.3].forEach(x => {
           const rim = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.024, 14, 28), mat(0xd97706, 0.2));
           rim.position.set(x, -0.04, 0.8);
@@ -473,6 +504,7 @@
         group.userData.head = headGroup;
 
       } else if (type === "bambi") {
+        // 3. 밤비 (아기 강아지)
         const body = new THREE.Mesh(new THREE.SphereGeometry(0.68, 32, 32), mat(0xfbbf24));
         body.scale.set(0.95, 1.12, 0.88);
         body.position.y = -1.12;
@@ -518,6 +550,7 @@
         group.userData.head = headGroup;
 
       } else if (type === "luna") {
+        // 4. 루나 (달빛 고양이)
         const body = new THREE.Mesh(new THREE.SphereGeometry(0.65, 32, 32), mat(0xc084fc));
         body.scale.set(0.92, 1.12, 0.86);
         body.position.y = -1.12;
@@ -701,8 +734,8 @@
     let currentCharKey = null;
     let currentChar = null;
     let isTyping = false;
-    let chatHistory = []; // 현재 캐릭터 대화 내역
-    let lastTopic = null; // 직전 대화 주제 기억 (study, friend, family, tired)
+    let chatHistory = [];
+    let lastTopic = null;
 
     function getStorageKey(charKey) {
       return `maumon_chat_${charKey}`;
@@ -758,7 +791,6 @@
 
       setTimeout(() => initMain3DStage(charKey), 30);
 
-      // 저장된 대화 내역 불러오기
       const savedData = loadChatHistory(charKey);
       chatHistory = savedData.messages || [];
       lastTopic = savedData.lastTopic || null;
@@ -767,7 +799,6 @@
       chatBox.innerHTML = "";
 
       if (chatHistory.length > 0) {
-        // 기존 대화 복원
         chatHistory.forEach(msg => {
           if (msg.sender === "user") {
             renderUserBubble(msg.text);
@@ -776,7 +807,6 @@
           }
         });
       } else {
-        // 첫 방문 시 인사말 출력 및 저장
         showTypingAndReply(currentChar.greeting, "기본 인사 · Level 1", false);
       }
     }
@@ -803,7 +833,6 @@
     }
 
     function getSmartResponse(text) {
-      // 문장부호, 초성 등 제거한 순수 텍스트
       const clean = text.replace(/[!?.,~ㅋㅎㅠㅜ\s]/g, "");
 
       // 1. Level 3: 긴급 위기 키워드 감지 (최우선)
@@ -816,13 +845,13 @@
         };
       }
 
-      // 2. 가벼운 인사 문맥 처리 ("안녕?", "안녕", "하이", "반가워", "야" 등)
+      // 2. 가벼운 인사 문맥 처리
       const exactGreetings = ["안녕", "안녕하세요", "하이", "헬로", "반가워", "안뇽", "야", "저기", "있잖아"];
       if (exactGreetings.includes(clean) || clean.startsWith("안녕")) {
         return { tag: "일상 인사 · Level 1", isDanger: false, reply: currentChar.smallTalk.hi };
       }
 
-      // 3. 안부 묻기 ("잘 지냈어?", "뭐해?", "어떻게 지내?")
+      // 3. 안부 묻기
       if (["잘지냈", "뭐해", "뭐하고", "어떻게지내", "기분어때"].some(w => clean.includes(w))) {
         return { tag: "일상 안부 · Level 1", isDanger: false, reply: currentChar.smallTalk.howAreYou };
       }
@@ -837,7 +866,7 @@
         return { tag: "일상 대화 · Level 1", isDanger: false, reply: currentChar.smallTalk.thanks };
       }
 
-      // 6. RAG 전문 상담 매뉴얼 검색 (주제 업데이트 포함)
+      // 6. RAG 전문 상담 매뉴얼 검색
       if (["시험", "성적", "공부", "진로", "대학", "불안", "모의고사", "숙제", "학원", "점수"].some(w => text.includes(w))) {
         lastTopic = "study";
         return { tag: "학업·진로 매뉴얼 · Level 1", isDanger: false, reply: currentChar.manual.study };
@@ -858,10 +887,10 @@
         return { tag: "정서 안정 매뉴얼 · Level 2", isDanger: false, reply: currentChar.manual.tired };
       }
 
-      // 7. 직전 주제가 있는 상태에서 후속 반응("응", "맞아", "어떻게 해야 할지 모르겠어" 등)을 보일 때 문맥 연결
+      // 7. 직전 주제 후속 반응 연결
       if (lastTopic && (["어떻게", "모르겠", "막막", "맞아", "그래", "응", "어"].some(w => clean.includes(w)) || clean.length <= 4)) {
         const topicReply = currentChar.followUp[lastTopic];
-        lastTopic = null; // 한 번 이어간 후 초기화
+        lastTopic = null;
         return { tag: "맥락 심화 상담 · Level 2", isDanger: false, reply: topicReply };
       }
 
@@ -945,7 +974,6 @@
 
         renderBotBubble(replyHtml, tagText, isDanger);
 
-        // 봇 응답 저장
         chatHistory.push({
           sender: "bot",
           text: replyHtml,
