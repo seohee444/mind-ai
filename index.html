@@ -76,30 +76,38 @@
     }
     .change-btn:hover { background: rgba(255,255,255,0.4); }
 
-    /* 캐릭터 스테이지 */
+    /* 캐릭터 스테이지 (마우스 회전 + 내부 부유 애니메이션 분리로 충돌 해결) */
     .stage-wrapper {
-      height: 220px; width: 100%; position: relative;
+      height: 225px; width: 100%; position: relative;
       border-bottom: 1px solid #f1f5f9; overflow: hidden;
       display: flex; justify-content: center; align-items: flex-end;
-      perspective: 700px;
+      perspective: 650px;
+      cursor: pointer;
     }
     .character-actor {
-      width: 200px; height: 200px;
-      transition: transform 0.15s ease-out;
+      width: 205px; height: 205px;
+      transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1);
       transform-style: preserve-3d;
+      will-change: transform;
+    }
+    .actor-float {
+      width: 100%; height: 100%;
       animation: floatIdle 3.2s ease-in-out infinite;
     }
-    .character-actor.thinking {
-      animation: bounceTalk 0.6s ease-in-out infinite;
+    .character-actor.thinking .actor-float {
+      animation: bounceTalk 0.55s ease-in-out infinite;
     }
     .character-actor svg {
       width: 100%; height: 100%;
       filter: drop-shadow(0 12px 18px rgba(30, 41, 59, 0.14));
     }
+    .pupil {
+      transition: transform 0.08s ease-out;
+    }
     .stage-hint {
       position: absolute; top: 10px; left: 14px;
       font-size: 10.5px; color: rgba(30, 41, 59, 0.65);
-      background: rgba(255,255,255,0.82); padding: 3px 9px; border-radius: 10px;
+      background: rgba(255,255,255,0.85); padding: 3px 9px; border-radius: 10px;
       pointer-events: none;
     }
     .status-pill {
@@ -116,8 +124,8 @@
     }
     @keyframes bounceTalk {
       0%, 100% { transform: translateY(0px) rotate(0deg); }
-      25% { transform: translateY(-8px) rotate(-2deg); }
-      75% { transform: translateY(-8px) rotate(2deg); }
+      25% { transform: translateY(-8px) rotate(-2.5deg); }
+      75% { transform: translateY(-8px) rotate(2.5deg); }
     }
 
     /* 대화창 */
@@ -220,8 +228,10 @@
       </div>
 
       <div class="stage-wrapper" id="stageWrapper">
-        <div class="stage-hint">✨ 마우스를 움직이면 시선이 따라가요</div>
-        <div class="character-actor" id="characterActor"></div>
+        <div class="stage-hint">✨ 마우스를 움직이면 시선과 고개가 따라가요</div>
+        <div class="character-actor" id="characterActor">
+          <div class="actor-float" id="actorFloat"></div>
+        </div>
         <div class="status-pill" id="statusPill">● 이야기 듣는 중</div>
       </div>
 
@@ -264,10 +274,10 @@
             </linearGradient>
           </defs>
 
-          <!-- 풍성한 갈색 뒷머리 & 웨이브 -->
-          <path d="M 62 95 C 48 135, 52 180, 74 195 L 172 195 C 198 180, 202 125, 178 90 Z" fill="url(#hairT)"/>
-          <circle cx="176" cy="166" r="24" fill="url(#hairT)"/>
-          <circle cx="66" cy="166" r="20" fill="url(#hairT)"/>
+          <!-- 어깨 아래까지 풍성하게 내려오는 갈색 긴 웨이브 뒷머리 -->
+          <path d="M 60 112 C 44 148, 52 195, 78 205 L 174 205 C 202 192, 206 138, 180 105 Z" fill="url(#hairT)"/>
+          <circle cx="178" cy="176" r="24" fill="url(#hairT)"/>
+          <circle cx="64" cy="176" r="20" fill="url(#hairT)"/>
 
           <!-- 몸통 (흰 셔츠 + 네이비 베스트) -->
           <rect x="74" y="158" width="92" height="82" rx="38" fill="#FFFFFF"/>
@@ -283,48 +293,48 @@
           <circle cx="62" cy="158" r="14" fill="url(#skinT)"/>
 
           <!-- 양쪽 둥근 귀 -->
-          <ellipse cx="64" cy="108" rx="13" ry="17" fill="url(#skinT)"/>
-          <ellipse cx="66" cy="108" rx="7" ry="10" fill="#E8B490" opacity="0.5"/>
-          <ellipse cx="176" cy="108" rx="13" ry="17" fill="url(#skinT)"/>
-          <ellipse cx="174" cy="108" rx="7" ry="10" fill="#E8B490" opacity="0.5"/>
+          <ellipse cx="64" cy="112" rx="13" ry="17" fill="url(#skinT)"/>
+          <ellipse cx="66" cy="112" rx="7" ry="10" fill="#E8B490" opacity="0.5"/>
+          <ellipse cx="176" cy="112" rx="13" ry="17" fill="url(#skinT)"/>
+          <ellipse cx="174" cy="112" rx="7" ry="10" fill="#E8B490" opacity="0.5"/>
 
           <!-- 얼굴형 -->
-          <rect x="66" y="48" width="108" height="106" rx="52" fill="url(#skinT)"/>
+          <rect x="66" y="54" width="108" height="102" rx="50" fill="url(#skinT)"/>
 
-          <!-- 자연스러운 가르마 앞머리 & 옆머리 -->
-          <path d="M 66 96 C 64 62, 95 48, 126 52 C 108 62, 86 72, 74 98 Z" fill="url(#hairT)"/>
-          <path d="M 174 98 C 176 62, 145 48, 118 52 C 138 62, 156 72, 166 98 Z" fill="url(#hairT)"/>
+          <!-- 얼굴 옆선과 턱 라인에 밀착된 차분한 옆머리 & 앞머리 -->
+          <path d="M 66 105 C 65 72, 85 60, 118 62 C 95 70, 80 84, 72 118 C 67 115, 66 110, 66 105 Z" fill="url(#hairT)"/>
+          <path d="M 174 105 C 175 72, 155 60, 122 62 C 145 70, 160 84, 168 118 C 173 115, 174 110, 174 105 Z" fill="url(#hairT)"/>
 
           <!-- 볼터치 -->
-          <ellipse cx="88" cy="116" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
-          <ellipse cx="152" cy="116" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
+          <ellipse cx="88" cy="118" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
+          <ellipse cx="152" cy="118" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
 
           <!-- 눈썹 -->
-          <path d="M 94 84 Q 103 80 110 84" stroke="#4A3228" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-          <path d="M 130 84 Q 137 80 146 84" stroke="#4A3228" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <path d="M 94 87 Q 103 83 110 87" stroke="#4A3228" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <path d="M 130 87 Q 137 83 146 87" stroke="#4A3228" stroke-width="3.5" stroke-linecap="round" fill="none"/>
 
           <!-- 눈 -->
           <g class="eye-group">
-            <circle cx="104" cy="102" r="11.5" fill="#FFFFFF"/>
-            <circle class="pupil" cx="106" cy="100" r="6.8" fill="#1E1B18"/>
-            <circle cx="108" cy="98" r="2.2" fill="#FFFFFF"/>
+            <circle cx="104" cy="104" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="106" cy="102" r="6.8" fill="#1E1B18"/>
+            <circle cx="108" cy="100" r="2.2" fill="#FFFFFF"/>
 
-            <circle cx="136" cy="102" r="11.5" fill="#FFFFFF"/>
-            <circle class="pupil" cx="134" cy="100" r="6.8" fill="#1E1B18"/>
-            <circle cx="136" cy="98" r="2.2" fill="#FFFFFF"/>
+            <circle cx="136" cy="104" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="134" cy="102" r="6.8" fill="#1E1B18"/>
+            <circle cx="136" cy="100" r="2.2" fill="#FFFFFF"/>
           </g>
 
           <!-- 동그란 안경 -->
-          <circle cx="103" cy="104" r="15.5" stroke="#291D18" stroke-width="2.4" fill="none"/>
-          <circle cx="137" cy="104" r="15.5" stroke="#291D18" stroke-width="2.4" fill="none"/>
-          <path d="M 118.5 103 Q 120 101 121.5 103" stroke="#291D18" stroke-width="2.4" fill="none"/>
+          <circle cx="103" cy="106" r="15.5" stroke="#291D18" stroke-width="2.4" fill="none"/>
+          <circle cx="137" cy="106" r="15.5" stroke="#291D18" stroke-width="2.4" fill="none"/>
+          <path d="M 118.5 105 Q 120 103 121.5 105" stroke="#291D18" stroke-width="2.4" fill="none"/>
 
           <!-- 도톰한 입술 -->
-          <ellipse cx="120" cy="126" rx="8.5" ry="4.5" fill="#D96B66"/>
+          <ellipse cx="120" cy="128" rx="8.5" ry="4.5" fill="#D96B66"/>
 
-          <!-- 다크브라운 베레모 -->
-          <path d="M 54 64 C 52 30, 105 20, 148 30 C 182 38, 188 68, 174 80 C 150 64, 86 64, 54 64 Z" fill="url(#beretGrad)"/>
-          <rect x="116" y="17" width="8" height="10" rx="4" fill="#2A1B14" transform="rotate(8 120 22)"/>
+          <!-- 머리에 푹 눌러쓴 다크브라운 베레모 (이마선까지 내려 밀착) -->
+          <path d="M 55 72 C 55 38, 106 28, 148 38 C 180 46, 187 74, 174 86 C 148 70, 88 70, 55 72 Z" fill="url(#beretGrad)"/>
+          <rect x="116" y="25" width="8" height="10" rx="4" fill="#2A1B14" transform="rotate(8 120 30)"/>
 
           <!-- 초록 다이어리 & 책갈피 & 오른손 -->
           <g transform="rotate(-12 145 195)">
@@ -357,8 +367,8 @@
             </linearGradient>
           </defs>
 
-          <!-- 목덜미 숏컷 뒷머리 -->
-          <rect x="64" y="88" width="112" height="62" rx="28" fill="url(#hairH)"/>
+          <!-- 목덜미까지 풍성하게 감싸는 다크브라운 뒷머리 -->
+          <path d="M 62 96 C 58 135, 66 164, 84 166 L 156 166 C 174 164, 182 135, 178 96 Z" fill="url(#hairH)"/>
 
           <!-- 후드티 몸통 -->
           <rect x="72" y="158" width="96" height="82" rx="40" fill="url(#hoodieH)"/>
@@ -373,41 +383,41 @@
           <circle cx="174" cy="195" r="14" fill="url(#skinH)"/>
 
           <!-- 귀 -->
-          <ellipse cx="64" cy="108" rx="13" ry="17" fill="url(#skinH)"/>
-          <ellipse cx="176" cy="108" rx="13" ry="17" fill="url(#skinH)"/>
+          <ellipse cx="64" cy="112" rx="13" ry="17" fill="url(#skinH)"/>
+          <ellipse cx="176" cy="112" rx="13" ry="17" fill="url(#skinH)"/>
 
           <!-- 얼굴형 -->
-          <rect x="66" y="48" width="108" height="106" rx="52" fill="url(#skinH)"/>
+          <rect x="66" y="54" width="108" height="102" rx="50" fill="url(#skinH)"/>
 
-          <!-- 풍성하고 단정한 앞머리 & 옆머리 -->
-          <path d="M 65 98 C 65 56, 175 56, 175 98 C 170 84, 162 76, 154 74 L 146 86 L 135 72 L 122 88 L 108 72 L 94 86 L 84 74 C 76 78, 70 86, 65 98 Z" fill="url(#hairH)"/>
+          <!-- 모자 챙 아래로 자연스럽게 내려온 풍성한 시스루/댄디 앞머리 & 구레나룻 -->
+          <path d="M 65 106 C 64 72, 85 62, 120 62 C 155 62, 176 72, 175 106 C 171 96, 168 88, 162 84 L 152 92 L 140 80 L 126 94 L 112 80 L 98 94 L 84 82 C 74 88, 69 96, 65 106 Z" fill="url(#hairH)"/>
 
           <!-- 볼터치 -->
-          <ellipse cx="88" cy="116" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
-          <ellipse cx="152" cy="116" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
+          <ellipse cx="88" cy="118" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
+          <ellipse cx="152" cy="118" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
 
           <!-- 눈썹 -->
-          <path d="M 93 88 Q 102 84 110 88" stroke="#3B2F2F" stroke-width="3.5" stroke-linecap="round" fill="none"/>
-          <path d="M 130 88 Q 138 84 147 88" stroke="#3B2F2F" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <path d="M 93 92 Q 102 88 110 92" stroke="#3B2F2F" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <path d="M 130 92 Q 138 88 147 92" stroke="#3B2F2F" stroke-width="3.5" stroke-linecap="round" fill="none"/>
 
           <!-- 눈 -->
           <g class="eye-group">
-            <circle cx="103" cy="104" r="11.5" fill="#FFFFFF"/>
-            <circle class="pupil" cx="104" cy="103" r="7" fill="#1E1B18"/>
-            <circle cx="106" cy="100" r="2.4" fill="#FFFFFF"/>
+            <circle cx="103" cy="107" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="104" cy="106" r="7" fill="#1E1B18"/>
+            <circle cx="106" cy="103" r="2.4" fill="#FFFFFF"/>
 
-            <circle cx="137" cy="104" r="11.5" fill="#FFFFFF"/>
-            <circle class="pupil" cx="136" cy="103" r="7" fill="#1E1B18"/>
-            <circle cx="138" cy="100" r="2.4" fill="#FFFFFF"/>
+            <circle cx="137" cy="107" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="136" cy="106" r="7" fill="#1E1B18"/>
+            <circle cx="138" cy="103" r="2.4" fill="#FFFFFF"/>
           </g>
 
           <!-- 해맑은 입 -->
-          <path d="M 111 124 Q 120 134 129 124 Z" fill="#F43F5E"/>
+          <path d="M 111 126 Q 120 136 129 126 Z" fill="#F43F5E"/>
 
-          <!-- 스카이블루 볼캡 (앞머리 위로 씌운 형태) -->
-          <path d="M 66 64 C 66 26, 174 26, 174 64 Z" fill="url(#capH)"/>
-          <circle cx="120" cy="31" r="5" fill="#0284C7"/>
-          <path d="M 64 62 Q 120 50 176 62 Q 145 73 95 73 Z" fill="#F8FAFC"/>
+          <!-- 머리에 푹 눌러쓴 스카이블루 볼캡 (앞머리와 빈틈없이 밀착) -->
+          <path d="M 65 74 C 65 34, 175 34, 175 74 Z" fill="url(#capH)"/>
+          <circle cx="120" cy="41" r="5" fill="#0284C7"/>
+          <path d="M 63 72 Q 120 60 177 72 Q 145 83 95 83 Z" fill="#F8FAFC"/>
         </svg>
       `,
       bambi: `
@@ -673,34 +683,52 @@
     };
 
     // ================= 초기화 & 시선 인터랙션 =================
+    function updateActorTracking(clientX, clientY) {
+      const stage = document.getElementById("stageWrapper");
+      const actor = document.getElementById("characterActor");
+      if (!stage || !actor) return;
+
+      const rect = stage.getBoundingClientRect();
+      const nx = Math.max(-1.2, Math.min(1.2, ((clientX - rect.left) / rect.width) * 2 - 1));
+      const ny = Math.max(-1.2, Math.min(1.2, ((clientY - rect.top) / rect.height) * 2 - 1));
+
+      actor.style.transform = `rotateY(${nx * 18}deg) rotateX(${-ny * 12}deg)`;
+      const pupils = actor.querySelectorAll(".pupil");
+      pupils.forEach(p => {
+        p.style.transform = `translate(${nx * 3.5}px, ${ny * 2.5}px)`;
+      });
+    }
+
+    function resetActorTracking() {
+      const actor = document.getElementById("characterActor");
+      if (!actor) return;
+      actor.style.transform = "rotateY(0deg) rotateX(0deg)";
+      actor.querySelectorAll(".pupil").forEach(p => {
+        p.style.transform = "translate(0px, 0px)";
+      });
+    }
+
     window.onload = () => {
       ["haru", "teacher", "bambi", "luna"].forEach(key => {
         document.getElementById(`preview-${key}`).innerHTML = characterSVGs[key];
       });
 
-      const stage = document.getElementById("stageWrapper");
-      stage.addEventListener("mousemove", (e) => {
-        const actor = document.getElementById("characterActor");
-        if (!actor) return;
-        const rect = stage.getBoundingClientRect();
-        const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-        const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-
-        actor.style.transform = `rotateY(${nx * 14}deg) rotateX(${-ny * 8}deg)`;
-        const pupils = actor.querySelectorAll(".pupil");
-        pupils.forEach(p => {
-          p.style.transform = `translate(${nx * 2.5}px, ${ny * 2}px)`;
-        });
+      const appContainer = document.querySelector(".app-container");
+      // 채팅 화면 전체에서 마우스/터치 움직임에 반응하도록 확장
+      appContainer.addEventListener("mousemove", (e) => {
+        if (document.getElementById("chatScreen").style.display === "flex") {
+          updateActorTracking(e.clientX, e.clientY);
+        }
       });
 
-      stage.addEventListener("mouseleave", () => {
-        const actor = document.getElementById("characterActor");
-        if (!actor) return;
-        actor.style.transform = "rotateY(0deg) rotateX(0deg)";
-        actor.querySelectorAll(".pupil").forEach(p => {
-          p.style.transform = "translate(0px, 0px)";
-        });
-      });
+      appContainer.addEventListener("touchmove", (e) => {
+        if (e.touches[0] && document.getElementById("chatScreen").style.display === "flex") {
+          updateActorTracking(e.touches[0].clientX, e.touches[0].clientY);
+        }
+      }, { passive: true });
+
+      appContainer.addEventListener("mouseleave", resetActorTracking);
+      appContainer.addEventListener("touchend", resetActorTracking);
     };
 
     // ================= 대화 저장(localStorage) & 문맥 인식 엔진 =================
@@ -759,7 +787,8 @@
       document.getElementById("headerName").innerText = currentChar.name;
       document.getElementById("headerRole").innerText = currentChar.role;
       document.getElementById("stageWrapper").style.background = currentChar.stageBg;
-      document.getElementById("characterActor").innerHTML = characterSVGs[charKey];
+      document.getElementById("actorFloat").innerHTML = characterSVGs[charKey];
+      resetActorTracking();
 
       const savedData = loadChatHistory(charKey);
       chatHistory = savedData.messages || [];
