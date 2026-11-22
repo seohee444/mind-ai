@@ -76,7 +76,7 @@
     }
     .change-btn:hover { background: rgba(255,255,255,0.4); }
 
-    /* 캐릭터 스테이지 (마우스 회전 + 내부 부유 애니메이션 분리로 충돌 해결) */
+    /* 캐릭터 스테이지 */
     .stage-wrapper {
       height: 225px; width: 100%; position: relative;
       border-bottom: 1px solid #f1f5f9; overflow: hidden;
@@ -255,12 +255,12 @@
               <stop offset="70%" stop-color="#FFD8B8"/>
               <stop offset="100%" stop-color="#E8B894"/>
             </radialGradient>
-            <radialGradient id="beretGrad" cx="35%" cy="25%" r="70%">
+            <radialGradient id="beretGrad" cx="45%" cy="28%" r="70%">
               <stop offset="0%" stop-color="#543D32"/>
               <stop offset="65%" stop-color="#36241C"/>
               <stop offset="100%" stop-color="#1E130E"/>
             </radialGradient>
-            <radialGradient id="hairT" cx="40%" cy="30%" r="70%">
+            <radialGradient id="hairT" cx="45%" cy="35%" r="70%">
               <stop offset="0%" stop-color="#8C6249"/>
               <stop offset="100%" stop-color="#593B2A"/>
             </radialGradient>
@@ -274,10 +274,10 @@
             </linearGradient>
           </defs>
 
-          <!-- 어깨 아래까지 풍성하게 내려오는 갈색 긴 웨이브 뒷머리 -->
-          <path d="M 60 112 C 44 148, 52 195, 78 205 L 174 205 C 202 192, 206 138, 180 105 Z" fill="url(#hairT)"/>
-          <circle cx="178" cy="176" r="24" fill="url(#hairT)"/>
-          <circle cx="64" cy="176" r="20" fill="url(#hairT)"/>
+          <!-- 풍성한 갈색 긴 웨이브 뒷머리 -->
+          <path d="M 58 100 C 44 140, 50 192, 76 204 L 166 204 C 194 192, 200 138, 182 98 Z" fill="url(#hairT)"/>
+          <circle cx="176" cy="174" r="24" fill="url(#hairT)"/>
+          <circle cx="64" cy="174" r="22" fill="url(#hairT)"/>
 
           <!-- 몸통 (흰 셔츠 + 네이비 베스트) -->
           <rect x="74" y="158" width="92" height="82" rx="38" fill="#FFFFFF"/>
@@ -301,9 +301,9 @@
           <!-- 얼굴형 -->
           <rect x="66" y="54" width="108" height="102" rx="50" fill="url(#skinT)"/>
 
-          <!-- 얼굴 옆선과 턱 라인에 밀착된 차분한 옆머리 & 앞머리 -->
-          <path d="M 66 105 C 65 72, 85 60, 118 62 C 95 70, 80 84, 72 118 C 67 115, 66 110, 66 105 Z" fill="url(#hairT)"/>
-          <path d="M 174 105 C 175 72, 155 60, 122 62 C 145 70, 160 84, 168 118 C 173 115, 174 110, 174 105 Z" fill="url(#hairT)"/>
+          <!-- 얼굴 윤곽에 자연스럽게 이어지는 앞머리 & 옆머리 -->
+          <path d="M 65 108 C 64 70, 90 56, 120 62 C 98 68, 82 82, 72 116 C 67 115, 65 112, 65 108 Z" fill="url(#hairT)"/>
+          <path d="M 175 108 C 176 70, 150 56, 120 62 C 142 68, 158 82, 168 116 C 173 115, 175 112, 175 108 Z" fill="url(#hairT)"/>
 
           <!-- 볼터치 -->
           <ellipse cx="88" cy="118" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
@@ -332,9 +332,10 @@
           <!-- 도톰한 입술 -->
           <ellipse cx="120" cy="128" rx="8.5" ry="4.5" fill="#D96B66"/>
 
-          <!-- 머리에 푹 눌러쓴 다크브라운 베레모 (이마선까지 내려 밀착) -->
-          <path d="M 55 72 C 55 38, 106 28, 148 38 C 180 46, 187 74, 174 86 C 148 70, 88 70, 55 72 Z" fill="url(#beretGrad)"/>
-          <rect x="116" y="25" width="8" height="10" rx="4" fill="#2A1B14" transform="rotate(8 120 30)"/>
+          <!-- 중앙 균형을 맞춘 다크브라운 베레모 (좌우 대칭) -->
+          <path d="M 60 72 C 62 36, 178 36, 180 72 C 154 64, 86 64, 60 72 Z" fill="url(#beretGrad)"/>
+          <path d="M 66 71 Q 120 63 174 71" stroke="#241712" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <rect x="116" y="34" width="8" height="9" rx="4" fill="#2A1B14"/>
 
           <!-- 초록 다이어리 & 책갈피 & 오른손 -->
           <g transform="rotate(-12 145 195)">
@@ -357,18 +358,15 @@
               <stop offset="0%" stop-color="#38BDF8"/>
               <stop offset="100%" stop-color="#0284C7"/>
             </linearGradient>
-            <radialGradient id="capH" cx="35%" cy="25%" r="70%">
-              <stop offset="0%" stop-color="#38BDF8"/>
-              <stop offset="100%" stop-color="#0369A1"/>
+            <radialGradient id="hairH" cx="42%" cy="28%" r="72%">
+              <stop offset="0%" stop-color="#5C4944"/>
+              <stop offset="65%" stop-color="#3A2D2A"/>
+              <stop offset="100%" stop-color="#221A18"/>
             </radialGradient>
-            <linearGradient id="hairH" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#4A3B38"/>
-              <stop offset="100%" stop-color="#29201E"/>
-            </linearGradient>
           </defs>
 
-          <!-- 목덜미까지 풍성하게 감싸는 다크브라운 뒷머리 -->
-          <path d="M 62 96 C 58 135, 66 164, 84 166 L 156 166 C 174 164, 182 135, 178 96 Z" fill="url(#hairH)"/>
+          <!-- 목덜미까지 풍성한 다크브라운 뒷머리 -->
+          <path d="M 60 88 C 56 132, 64 164, 84 166 L 156 166 C 176 164, 184 132, 180 88 Z" fill="url(#hairH)"/>
 
           <!-- 후드티 몸통 -->
           <rect x="72" y="158" width="96" height="82" rx="40" fill="url(#hoodieH)"/>
@@ -387,10 +385,26 @@
           <ellipse cx="176" cy="112" rx="13" ry="17" fill="url(#skinH)"/>
 
           <!-- 얼굴형 -->
-          <rect x="66" y="54" width="108" height="102" rx="50" fill="url(#skinH)"/>
+          <rect x="66" y="52" width="108" height="104" rx="50" fill="url(#skinH)"/>
 
-          <!-- 모자 챙 아래로 자연스럽게 내려온 풍성한 시스루/댄디 앞머리 & 구레나룻 -->
-          <path d="M 65 106 C 64 72, 85 62, 120 62 C 155 62, 176 72, 175 106 C 171 96, 168 88, 162 84 L 152 92 L 140 80 L 126 94 L 112 80 L 98 94 L 84 82 C 74 88, 69 96, 65 106 Z" fill="url(#hairH)"/>
+          <!-- 모자 없이 볼륨감 있고 자연스러운 댄디컷 헤어 (정수리 + 앞머리 + 옆머리 일체형) -->
+          <path d="
+            M 63 108
+            C 58 64, 84 36, 120 36
+            C 156 36, 182 64, 177 108
+            C 173 96, 169 86, 163 80
+            L 154 90
+            L 144 74
+            L 131 92
+            L 119 72
+            L 105 91
+            L 93 74
+            L 81 88
+            C 73 84, 68 95, 63 108 Z"
+            fill="url(#hairH)"/>
+
+          <!-- 정수리 자연스러운 머릿결 하이라이트 -->
+          <path d="M 94 49 Q 120 43 146 49" stroke="#755E58" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.6"/>
 
           <!-- 볼터치 -->
           <ellipse cx="88" cy="118" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
@@ -413,11 +427,6 @@
 
           <!-- 해맑은 입 -->
           <path d="M 111 126 Q 120 136 129 126 Z" fill="#F43F5E"/>
-
-          <!-- 머리에 푹 눌러쓴 스카이블루 볼캡 (앞머리와 빈틈없이 밀착) -->
-          <path d="M 65 74 C 65 34, 175 34, 175 74 Z" fill="url(#capH)"/>
-          <circle cx="120" cy="41" r="5" fill="#0284C7"/>
-          <path d="M 63 72 Q 120 60 177 72 Q 145 83 95 83 Z" fill="#F8FAFC"/>
         </svg>
       `,
       bambi: `
@@ -714,7 +723,6 @@
       });
 
       const appContainer = document.querySelector(".app-container");
-      // 채팅 화면 전체에서 마우스/터치 움직임에 반응하도록 확장
       appContainer.addEventListener("mousemove", (e) => {
         if (document.getElementById("chatScreen").style.display === "flex") {
           updateActorTracking(e.clientX, e.clientY);
