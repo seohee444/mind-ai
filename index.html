@@ -1,1085 +1,1773 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>마음온(On) - 3D AI 심리 상담소</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <style>
-    * { box-sizing: border-box; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
-    body {
-      background: radial-gradient(circle at top left, #eef2ff, #fdf4ff, #fff7ed);
-      display: flex; justify-content: center; align-items: center;
-      min-height: 100vh; margin: 0; padding: 12px;
-    }
-    .app-container {
-      width: 100%; max-width: 450px; height: 88vh; max-height: 780px;
-      background: #ffffff; border-radius: 30px;
-      box-shadow: 0 18px 45px rgba(30, 41, 59, 0.12);
-      overflow: hidden; display: flex; flex-direction: column; position: relative;
-      border: 1px solid #f1f5f9;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>마음온(On) - 3D AI 심리 상담소</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    /* 1. 캐릭터 선택 화면 */
-    .select-screen {
-      flex: 1; padding: 24px 18px; display: flex; flex-direction: column;
-      overflow-y: auto; background: linear-gradient(180deg, #fafbff 0%, #ffffff 100%);
-    }
-    .select-header { text-align: center; margin-bottom: 18px; }
-    .select-header h2 { margin: 0 0 6px; font-size: 21px; color: #1e293b; letter-spacing: -0.5px; }
-    .select-header p { margin: 0; font-size: 13px; color: #64748b; line-height: 1.45; }
+<style>
+* {
+  box-sizing: border-box;
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+}
 
-    .char-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; flex: 1; }
-    .char-card {
-      background: #ffffff; border: 2px solid #f1f5f9; border-radius: 22px;
-      padding: 12px 10px 14px; cursor: pointer; transition: 0.25s all ease;
-      display: flex; flex-direction: column; align-items: center; text-align: center;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.03);
-    }
-    .char-card:hover {
-      transform: translateY(-4px); border-color: #818cf8;
-      box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15);
-    }
-    .card-3d-preview {
-      width: 126px; height: 126px; border-radius: 20px;
-      margin-bottom: 10px; overflow: hidden; position: relative;
-    }
-    .card-badge {
-      font-size: 10.5px; font-weight: bold; padding: 3px 9px;
-      border-radius: 12px; margin-bottom: 5px;
-    }
-    .char-card h3 { margin: 0 0 4px; font-size: 16px; color: #0f172a; }
-    .char-card p { margin: 0; font-size: 11.5px; color: #64748b; line-height: 1.35; word-break: keep-all; }
+body {
+  background: radial-gradient(circle at top left, #dbeafe, #f3e8ff 55%, #ffedd5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 12px;
+}
 
-    /* 2. 채팅 화면 */
-    .chat-screen { display: none; flex-direction: column; height: 100%; }
+.app-container {
+  width: 100%;
+  max-width: 450px;
+  height: 88vh;
+  max-height: 780px;
+  background: #fff;
+  border-radius: 30px;
+  box-shadow: 0 18px 45px rgba(30,41,59,.14);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 1px solid #f1f5f9;
+}
 
-    .top-bar {
-      padding: 13px 16px; color: white; display: flex;
-      align-items: center; justify-content: space-between; z-index: 5;
-    }
-    .top-bar-title { display: flex; align-items: center; gap: 6px; }
-    .top-bar-title h3 { margin: 0; font-size: 16px; }
-    .top-bar-title span {
-      font-size: 10.5px; background: rgba(255,255,255,0.22);
-      padding: 2px 8px; border-radius: 10px;
-    }
-    .top-bar-actions { display: flex; gap: 6px; }
-    .change-btn {
-      background: rgba(255,255,255,0.25); border: none; color: white;
-      font-size: 11.5px; padding: 6px 10px; border-radius: 14px;
-      cursor: pointer; font-weight: bold; transition: 0.2s;
-    }
-    .change-btn:hover { background: rgba(255,255,255,0.4); }
+/* 캐릭터 선택 화면 */
 
-    /* 3D 캐릭터 무대 */
-    .stage-3d-wrapper {
-      height: 225px; width: 100%; position: relative;
-      border-bottom: 1px solid #f1f5f9; overflow: hidden;
-      cursor: grab;
-    }
-    .stage-3d-wrapper:active { cursor: grabbing; }
-    #threeCanvasContainer { width: 100%; height: 100%; }
-    .stage-hint {
-      position: absolute; top: 10px; left: 14px;
-      font-size: 10.5px; color: rgba(30, 41, 59, 0.65);
-      background: rgba(255,255,255,0.78); padding: 3px 9px; border-radius: 10px;
-      pointer-events: none;
-    }
-    .status-pill {
-      position: absolute; bottom: 10px; right: 14px;
-      background: rgba(255,255,255,0.94); color: #334155;
-      font-size: 11px; padding: 4px 11px; border-radius: 14px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.08); font-weight: bold;
-      pointer-events: none;
-    }
+.select-screen {
+  flex: 1;
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: linear-gradient(180deg,#f5f3ff,#fffaf5);
+}
 
-    /* 대화창 */
-    .chat-box {
-      flex: 1; padding: 16px 14px; overflow-y: auto;
-      display: flex; flex-direction: column; gap: 12px; background: #f8fafc;
-    }
-    .msg-row { display: flex; flex-direction: column; max-width: 82%; }
-    .msg-row.bot-row { align-self: flex-start; }
-    .msg-row.user-row { align-self: flex-end; align-items: flex-end; }
-    .sender-label { font-size: 11px; color: #64748b; margin: 0 0 4px 6px; font-weight: bold; }
-    .bubble {
-      padding: 11px 15px; border-radius: 18px; font-size: 13.8px;
-      line-height: 1.55; word-break: keep-all; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    }
-    .bot-bubble { background: #ffffff; color: #1e293b; border-top-left-radius: 4px; border: 1px solid #e2e8f0; }
-    .user-bubble { color: #ffffff; border-top-right-radius: 4px; }
-    .tag {
-      display: inline-block; font-size: 10px; font-weight: bold;
-      padding: 2px 7px; border-radius: 6px; margin-bottom: 5px;
-      background: #f1f5f9; color: #475569;
-    }
+.select-header {
+  text-align: center;
+  margin-bottom: 18px;
+}
 
-    .danger-bubble { background: #fff5f5; border: 1.5px solid #ff6b6b; color: #c92a2a; }
-    .danger-bubble .tag { background: #ff6b6b; color: white; }
+.select-header h2 {
+  margin: 0 0 7px;
+  font-size: 21px;
+  color: #334155;
+  letter-spacing: -.5px;
+}
 
-    .typing-dots { display: flex; gap: 5px; padding: 13px 16px; align-items: center; }
-    .dot { width: 7px; height: 7px; background: #94a3b8; border-radius: 50%; animation: bounce 1.3s infinite ease-in-out; }
-    .dot:nth-child(2) { animation-delay: 0.2s; }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce { 0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; } 40% { transform: scale(1.15); opacity: 1; } }
+.select-header p {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
 
-    .input-area {
-      display: flex; padding: 11px 12px; background: #ffffff;
-      border-top: 1px solid #e2e8f0; gap: 8px;
-    }
-    input {
-      flex: 1; border: 1.5px solid #cbd5e1; border-radius: 22px;
-      padding: 10px 16px; font-size: 14px; outline: none; transition: 0.2s;
-    }
-    input:focus { border-color: #6366f1; }
-    .send-btn {
-      border: none; border-radius: 22px; padding: 0 18px;
-      color: white; font-weight: bold; font-size: 14px; cursor: pointer;
-    }
-    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  </style>
+.char-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  flex: 1;
+}
+
+.char-card {
+  background: #fff;
+  border: 2px solid #f1f5f9;
+  border-radius: 22px;
+  padding: 12px 10px 14px;
+  cursor: pointer;
+  transition: .25s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,.04);
+}
+
+.char-card:hover {
+  transform: translateY(-4px);
+  border-color: #a5b4fc;
+  box-shadow: 0 12px 24px rgba(99,102,241,.13);
+}
+
+.card-3d-preview {
+  width: 126px;
+  height: 126px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.card-3d-preview canvas {
+  display: block;
+}
+
+.card-badge {
+  font-size: 10.5px;
+  font-weight: bold;
+  padding: 4px 9px;
+  border-radius: 12px;
+  margin-bottom: 6px;
+}
+
+.char-card h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.char-card p {
+  margin: 0;
+  font-size: 11.5px;
+  color: #64748b;
+  line-height: 1.4;
+  word-break: keep-all;
+}
+
+/* 채팅 화면 */
+
+.chat-screen {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+}
+
+.top-bar {
+  padding: 13px 16px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 5;
+}
+
+.top-bar-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.top-bar-title h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.top-bar-title span {
+  font-size: 10.5px;
+  background: rgba(255,255,255,.22);
+  padding: 3px 8px;
+  border-radius: 10px;
+}
+
+.top-bar-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.change-btn {
+  background: rgba(255,255,255,.25);
+  border: none;
+  color: white;
+  font-size: 10.5px;
+  padding: 7px 9px;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.change-btn:hover {
+  background: rgba(255,255,255,.4);
+}
+
+/* 3D 무대 */
+
+.stage-3d-wrapper {
+  height: 245px;
+  width: 100%;
+  position: relative;
+  border-bottom: 1px solid #e2e8f0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.stage-3d-wrapper:active {
+  cursor: grabbing;
+}
+
+#threeCanvasContainer {
+  width: 100%;
+  height: 100%;
+}
+
+#threeCanvasContainer canvas {
+  display: block;
+}
+
+.stage-hint {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  font-size: 10.5px;
+  color: rgba(30,41,59,.7);
+  background: rgba(255,255,255,.8);
+  padding: 4px 9px;
+  border-radius: 10px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.status-pill {
+  position: absolute;
+  bottom: 10px;
+  right: 14px;
+  background: rgba(255,255,255,.94);
+  color: #334155;
+  font-size: 11px;
+  padding: 5px 11px;
+  border-radius: 14px;
+  box-shadow: 0 3px 10px rgba(0,0,0,.08);
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* 대화창 */
+
+.chat-box {
+  flex: 1;
+  padding: 16px 14px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f8fafc;
+}
+
+.msg-row {
+  display: flex;
+  flex-direction: column;
+  max-width: 82%;
+}
+
+.msg-row.bot-row {
+  align-self: flex-start;
+}
+
+.msg-row.user-row {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.sender-label {
+  font-size: 11px;
+  color: #64748b;
+  margin: 0 0 4px 6px;
+  font-weight: bold;
+}
+
+.bubble {
+  padding: 11px 15px;
+  border-radius: 18px;
+  font-size: 13.8px;
+  line-height: 1.55;
+  word-break: keep-all;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+
+.bot-bubble {
+  background: #fff;
+  color: #1e293b;
+  border-top-left-radius: 4px;
+  border: 1px solid #e2e8f0;
+}
+
+.user-bubble {
+  color: #fff;
+  border-top-right-radius: 4px;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 7px;
+  border-radius: 6px;
+  margin-bottom: 5px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.danger-bubble {
+  background: #fff5f5;
+  border: 1.5px solid #ff6b6b;
+  color: #c92a2a;
+}
+
+.danger-bubble .tag {
+  background: #ff6b6b;
+  color: white;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 5px;
+  padding: 13px 16px;
+  align-items: center;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  background: #94a3b8;
+  border-radius: 50%;
+  animation: bounce 1.3s infinite ease-in-out;
+}
+
+.dot:nth-child(2) { animation-delay: .2s; }
+.dot:nth-child(3) { animation-delay: .4s; }
+
+@keyframes bounce {
+  0%,80%,100% { transform: scale(.7); opacity: .5; }
+  40% { transform: scale(1.15); opacity: 1; }
+}
+
+.input-area {
+  display: flex;
+  padding: 11px 12px;
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+  gap: 8px;
+}
+
+input {
+  flex: 1;
+  min-width: 0;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 22px;
+  padding: 10px 16px;
+  font-size: 14px;
+  outline: none;
+  transition: .2s;
+}
+
+input:focus {
+  border-color: #6366f1;
+}
+
+.send-btn {
+  border: none;
+  border-radius: 22px;
+  padding: 0 18px;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.send-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+@media(max-height:650px) {
+  .app-container {
+    height: 95vh;
+  }
+  .stage-3d-wrapper {
+    height: 190px;
+  }
+  .card-3d-preview {
+    width: 105px;
+    height: 105px;
+  }
+}
+</style>
 </head>
+
 <body>
-  <div class="app-container">
-    <!-- 1. 캐릭터 선택 화면 -->
-    <div class="select-screen" id="selectScreen">
-      <div class="select-header">
-        <h2>오늘 누구랑 이야기할까?</h2>
-        <p>검증된 상담 매뉴얼을 바탕으로<br>네 마음을 따뜻하게 들어줄 친구를 선택해 줘!</p>
-      </div>
+<div class="app-container">
 
-      <div class="char-grid">
-        <div class="char-card" onclick="selectCharacter('haru')">
-          <div class="card-3d-preview" style="background:linear-gradient(135deg, #e0f2fe, #bae6fd);" id="preview-haru"></div>
-          <span class="card-badge" style="background:#bae6fd; color:#0369a1;">동갑내기 단짝 친구</span>
-          <h3>하루</h3>
-          <p>"무조건 네 편이야! 편하게 반말로 다 털어놔."</p>
-        </div>
-
-        <div class="char-card" onclick="selectCharacter('teacher')">
-          <div class="card-3d-preview" style="background:linear-gradient(135deg, #dcfce7, #bbf7d0);" id="preview-teacher"></div>
-          <span class="card-badge" style="background:#bbf7d0; color:#15803d;">다정한 상담 선생님</span>
-          <h3>선생님</h3>
-          <p>"혼자 고민하지 마세요. 선생님이 차분히 들어줄게요."</p>
-        </div>
-
-        <div class="char-card" onclick="selectCharacter('bambi')">
-          <div class="card-3d-preview" style="background:linear-gradient(135deg, #ffedd5, #fed7aa);" id="preview-bambi"></div>
-          <span class="card-badge" style="background:#fed7aa; color:#c2410c;">말랑한 아기 강아지</span>
-          <h3>밤비</h3>
-          <p>"꼬리 흔들며 기다렸어! 오늘 무슨 일 있었어?"</p>
-        </div>
-
-        <div class="char-card" onclick="selectCharacter('luna')">
-          <div class="card-3d-preview" style="background:linear-gradient(135deg, #f3e8ff, #e9d5ff);" id="preview-luna"></div>
-          <span class="card-badge" style="background:#e9d5ff; color:#7e22ce;">차분한 달빛 고양이</span>
-          <h3>루나</h3>
-          <p>"복잡한 머릿속을 차분하게 정리해 줄게냥."</p>
-        </div>
-      </div>
+  <div class="select-screen" id="selectScreen">
+    <div class="select-header">
+      <h2>오늘 누구랑 이야기할까?</h2>
+      <p>검증된 상담 매뉴얼을 바탕으로<br>네 마음을 따뜻하게 들어줄 친구를 선택해 줘!</p>
     </div>
 
-    <!-- 2. 채팅 화면 -->
-    <div class="chat-screen" id="chatScreen">
-      <div class="top-bar" id="topBar">
-        <div class="top-bar-title">
-          <h3 id="headerName">하루</h3>
-          <span id="headerRole">동갑내기 단짝</span>
-        </div>
-        <div class="top-bar-actions">
-          <button class="change-btn" onclick="clearChatHistory()">대화 초기화</button>
-          <button class="change-btn" onclick="goBack()">캐릭터 바꾸기</button>
-        </div>
+    <div class="char-grid">
+
+      <div class="char-card" onclick="selectCharacter('haru')">
+        <div class="card-3d-preview" style="background:linear-gradient(135deg,#dbeafe,#bae6fd)" id="preview-haru"></div>
+        <span class="card-badge" style="background:#bae6fd;color:#0369a1">동갑내기 단짝 친구</span>
+        <h3>하루</h3>
+        <p>"무조건 네 편이야! 편하게 반말로 다 털어놔."</p>
       </div>
 
-      <div class="stage-3d-wrapper" id="stageWrapper">
-        <div class="stage-hint">↔ 좌우로 움직이면 입체로 반응해요</div>
-        <div id="threeCanvasContainer"></div>
-        <div class="status-pill" id="statusPill">● 이야기 듣는 중</div>
+      <div class="char-card" onclick="selectCharacter('teacher')">
+        <div class="card-3d-preview" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0)" id="preview-teacher"></div>
+        <span class="card-badge" style="background:#bbf7d0;color:#15803d">다정한 상담 선생님</span>
+        <h3>선생님</h3>
+        <p>"혼자 고민하지 마세요. 선생님이 차분히 들어줄게요."</p>
       </div>
 
-      <div class="chat-box" id="chatBox"></div>
-
-      <div class="input-area">
-        <input type="text" id="userInput" placeholder="인사나 고민을 편하게 적어봐..." onkeypress="if(event.key==='Enter') sendMessage()" />
-        <button class="send-btn" id="sendBtn" onclick="sendMessage()">전송</button>
+      <div class="char-card" onclick="selectCharacter('bambi')">
+        <div class="card-3d-preview" style="background:linear-gradient(135deg,#ffedd5,#fed7aa)" id="preview-bambi"></div>
+        <span class="card-badge" style="background:#fed7aa;color:#c2410c">말랑한 아기 강아지</span>
+        <h3>밤비</h3>
+        <p>"꼬리 흔들며 기다렸어! 오늘 무슨 일 있었어?"</p>
       </div>
+
+      <div class="char-card" onclick="selectCharacter('luna')">
+        <div class="card-3d-preview" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff)" id="preview-luna"></div>
+        <span class="card-badge" style="background:#e9d5ff;color:#7e22ce">차분한 달빛 고양이</span>
+        <h3>루나</h3>
+        <p>"복잡한 머릿속을 차분하게 정리해 줄게냥."</p>
+      </div>
+
     </div>
   </div>
 
-  <script>
-    // 캐릭터별 문맥 맞춤 대화 데이터베이스
-    const characters = {
-      haru: {
-        name: "하루",
-        role: "동갑내기 단짝 친구",
-        themeColor: "#0284c7",
-        stageBg: "linear-gradient(180deg, #e0f2fe 0%, #f0f9ff 100%)",
-        greeting: "야호! 왔구나! 오늘 하루 어땠어? 그냥 심심해서 왔어도 좋고 고민 있어도 좋으니까 편하게 반말로 얘기해 봐!",
-        smallTalk: {
-          hi: "안녕! 반가워 ㅋㅋ 오늘 별일 없었어? 무슨 생각하고 있었어?",
-          howAreYou: "나는 너 와서 기분 완전 최고지! 너는 오늘 컨디션 어때?",
-          bored: "심심했구나? 나도 마침 너랑 수다 떨고 싶었는데 잘 왔다! 오늘 제일 재밌었거나 짜증 났던 일 하나만 말해봐!",
-          thanks: "에이 뭐가 고마워~ 우리 사이에! 언제든 답답하면 또 찾아와, 내가 제일 먼저 달려올게!",
-          yes: "응응! 그래서 그다음엔 어떻게 됐어? 편하게 계속 얘기해 줘!",
-          no: "아하, 그렇구나! 그럼 요즘 머릿속에 제일 많이 떠오르는 생각은 뭐야?",
-          short: "응응, 듣고 있어! 천천히 말해도 되니까 네 생각 편하게 다 꺼내봐."
-        },
-        followUp: {
-          study: "맞아, 막상 시작하려고 하면 어디서부터 손대야 할지 막막하지. 지금 당장 책상 위에 있는 것 중에 5분만 볼 수 있는 거 하나만 골라볼까?",
-          friend: "친구 일은 내 마음대로 안 돼서 더 답답하지... 네가 먼저 잘못한 게 아니라면 너무 자책하지 마. 오늘 하루는 네 기분 풀리는 일만 하자!",
-          family: "가족이랑은 매일 얼굴 봐야 하니까 더 신경 쓰이지 ㅠㅠ 당장 다 해결하려 하지 말고, 오늘은 네 공간에서 잠깐 숨 돌리는 시간부터 갖자.",
-          tired: "지금은 억지로 힘내려고 애쓰지 않아도 괜찮아. 물 한 잔 마시고 기지개 한 번 쭉 펴자! 내가 옆에 있어 줄게."
-        },
-        fallback: [
-          "오 그렇구나! 좀 더 자세히 들려줄래? 네가 어떻게 느꼈는지 궁금해!",
-          "음, 그런 일이 있었구나. 지금 네 기분은 어때? 편하게 다 털어놔도 돼!"
-        ],
-        manual: {
-          study: "시험이랑 성적 때문에 진짜 숨 막히고 불안하지? ㅠㅠ 잘하고 싶은 마음이 크니까 긴장되는 건 당연한 거야! 오늘은 거창한 계획 말고, 딱 20분만 할 수 있는 제일 만만한 과목부터 같이 해보자. 내가 옆에서 응원할게!",
-          friend: "헐, 친구 문제 때문에 진짜 속상하고 마음 복잡했겠다... 믿었던 친구한테 서운하면 하루 종일 아무것도 손에 안 잡히잖아. 지금은 네 마음이 다치지 않는 게 제일 중요해. 감정이 조금 가라앉으면 솔직하게 말해보거나 믿을 수 있는 어른께 도움을 청해보자!",
-          family: "집에서 가족이랑 부딪히면 진짜 편히 쉴 곳이 없는 기분이라 너무 답답하지 ㅠㅠ 당장 부모님 생각을 바꾸긴 어려우니까, 오늘은 네 방에서 좋아하는 음악 들으면서 네 마음부터 먼저 달래주자. 넌 충분히 잘하고 있어!",
-          tired: "요즘 잠도 잘 못 자고 계속 지치는구나... 몸이랑 마음이 다 방전된 상태면 작은 일도 훨씬 크게 느껴지잖아. 오늘은 숙제나 걱정 잠깐 내려놓고 30분만이라도 푹 쉬자!"
-        }
-      },
-      teacher: {
-        name: "선생님",
-        role: "다정한 상담 선생님",
-        themeColor: "#16a34a",
-        stageBg: "linear-gradient(180deg, #dcfce7 0%, #f0fdf4 100%)",
-        greeting: "어서 오세요, 반가워요. 가벼운 인사도 좋고 마음속 고민도 좋아요. 선생님이 편하게 들어줄게요.",
-        smallTalk: {
-          hi: "안녕하세요! 오늘 찾아와 줘서 반가워요. 오늘 하루 기분은 좀 어때요?",
-          howAreYou: "선생님은 덕분에 아주 잘 지내고 있어요. 찾아와 준 여러분 이야기를 들을 때가 가장 보람차답니다. 오늘 컨디션은 어때요?",
-          bored: "잠시 쉬어가고 싶었군요. 꼭 거창한 고민이 아니어도 괜찮아요. 요즘 학교생활에서 가장 신경 쓰이는 일이 있나요?",
-          thanks: "고맙다고 말해줘서 선생님이 더 고마워요. 언제든 마음이 무거울 때 편하게 들러주세요.",
-          yes: "그렇군요. 이야기를 조금 더 이어가 볼까요? 어떤 부분이 가장 마음에 걸리나요?",
-          no: "알겠어요, 무리해서 말하지 않아도 괜찮아요. 편한 주제가 떠오르면 언제든 이야기해 주세요.",
-          short: "네, 선생님이 천천히 듣고 있어요. 부담 갖지 말고 편한 대로 이야기해 주세요."
-        },
-        followUp: {
-          study: "계획을 세우는 것조차 버거울 때가 있죠. 오늘은 공부를 많이 하는 것보다 책상에 10분 앉아 있는 것만으로도 충분히 잘한 거예요.",
-          friend: "관계에서 상처를 받으면 다시 마음을 열기가 쉽지 않죠. 하지만 모든 사람과 잘 지내야만 하는 건 아니니, 스스로를 먼저 아껴주길 바라요.",
-          family: "가까운 사이일수록 서운한 감정이 오래 남곤 해요. 오늘 당장 대화가 어렵다면 마음이 가라앉을 때까지 며칠 시간을 두는 것도 좋은 방법이에요.",
-          tired: "지칠 때는 잠시 멈춰 서는 용기도 필요해요. 오늘 밤에는 스마트폰을 잠시 내려놓고 따뜻한 이불 속에서 푹 쉬어보세요."
-        },
-        fallback: [
-          "그렇군요. 조금 더 자세히 이야기해 줄 수 있나요? 선생님이 함께 생각해 볼게요.",
-          "말씀해 주셔서 고마워요. 그 상황에서 본인은 어떤 마음이 가장 컸나요?"
-        ],
-        manual: {
-          study: "학업과 진로에 대한 불안감은 그만큼 성실하게 고민하고 있다는 증거이기도 해요. 하지만 모든 걸 한 번에 잘하려 하면 마음이 먼저 지치기 쉽답니다. 오늘은 지금 당장 실천할 수 있는 작은 목표 한 가지만 정해서 천천히 시작해 볼까요?",
-          friend: "친구 관계에서 오는 갈등은 학교생활 전체를 힘들게 만들 만큼 큰 고민이죠. 하지만 상대방의 행동 때문에 스스로의 가치를 낮추지 않았으면 해요. 감정이 조금 진정된 뒤에 차분히 대화하거나, 필요하다면 언제든 선생님과 해결 방법을 같이 찾아봐요.",
-          family: "가장 가까운 가족과 마음이 통하지 않을 때 느끼는 외로움이 참 크죠. 감정이 격해져 있을 때 대화하면 서로 상처가 되는 말만 오가기 쉬워요. 먼저 내가 어떤 부분에서 서운했는지 노트에 차분히 적어보면서 마음을 정리해 보는 건 어떨까요?",
-          tired: "몸과 마음이 많이 지쳐 있는 것 같아 걱정이네요. 충분히 쉬지 못하면 감정도 예민해지기 쉬워요. 오늘은 스스로를 다그치지 말고 일찍 눈을 감고 휴식을 선물해 주세요."
-        }
-      },
-      bambi: {
-        name: "밤비",
-        role: "말랑한 아기 강아지",
-        themeColor: "#ea580c",
-        stageBg: "linear-gradient(180deg, #ffedd5 0%, #fff7ed 100%)",
-        greeting: "멍! 반가워! 꼬리 흔들면서 기다리고 있었어 🐾 오늘 하루 어땠어? 그냥 수다 떨어도 좋고 고민 말해도 좋아!",
-        smallTalk: {
-          hi: "안녕! 멍멍! 나 보고 싶어서 왔지? ㅎㅎ 오늘 기분은 어때? 좋은 일 있었어?",
-          howAreYou: "밤비는 네가 와서 꼬리가 프로펠러처럼 돌아가고 있어! 멍! 너는 오늘 기분 어때?",
-          bored: "심심했구나! 밤비가 같이 놀아줄게! 오늘 점심은 맛있는 거 먹었어?",
-          thanks: "헤헤, 칭찬받아서 기분 최고야! 밤비는 언제나 네 편인 거 알지?",
-          yes: "멍멍! 그렇구나! 그다음엔 어떻게 됐는지 밤비한테 더 들려줘!",
-          no: "알겠어 멍! 그럼 오늘 제일 기분 좋았던 순간이 언제였는지 알려줄래?",
-          short: "멍! 귀 쫑긋 세우고 다 듣고 있어! 계속 말해줘!"
-        },
-        followUp: {
-          study: "멍! 너무 한꺼번에 하려고 하면 머리가 빙글빙글 돌지! 딱 한 문제만 풀고 밤비랑 잠깐 쉬자!",
-          friend: "속상한 일은 밤비가 다 핥아서 없애줄게! 멍! 네가 얼마나 다정한 사람인지 밤비는 다 알고 있어!",
-          family: "집에서 눈치 보이면 밤비 품에 쏙 들어와! 오늘은 맛있는 거 먹고 기분 전환 꼭 하자!",
-          tired: "하암~ 밤비도 졸려진다 멍! 오늘은 아무 걱정 말고 일찍 코 자자!"
-        },
-        fallback: [
-          "오오, 그랬구나! 그다음엔 어떻게 됐어? 밤비한테 다 들려줘!",
-          "음음, 그런 일이 있었구나! 지금 네 기분은 어떤지 더 얘기해 줄래?"
-        ],
-        manual: {
-          study: "시험 때문에 긴장되고 불안하구나! 멍! 열심히 하려는 네 모습이 밤비 눈엔 이미 너무 멋져 보여. 잠깐 크게 심호흡 한 번 하고, 딱 15분만 집중한 뒤에 잠깐 쉬어가자! 넌 충분히 잘해낼 수 있어!",
-          friend: "친구 때문에 마음 아팠구나... 믿었던 사이일수록 서운함이 훨씬 크잖아. 네 진심을 몰라주는 일 때문에 너무 오래 아파하지 마! 밤비가 네 기분 풀릴 때까지 계속 이야기 들어줄게!",
-          family: "가족이랑 부딪히면 집에서도 편히 쉬지 못해 정말 답답하지... 오늘은 맛있는 간식도 먹고 좋아하는 거 보면서 네 마음부터 따뜻하게 안아주자. 내일은 분명 오늘보다 마음이 한결 편해질 거야!",
-          tired: "에고, 에너지가 바닥났구나! 밤비 옆에 폭신하게 기대서 잠깐 눈 좀 붙여! 무리하지 말고 오늘은 푹 쉬어야 해!"
-        }
-      },
-      luna: {
-        name: "루나",
-        role: "차분한 달빛 고양이",
-        themeColor: "#9333ea",
-        stageBg: "linear-gradient(180deg, #f3e8ff 0%, #faf5ff 100%)",
-        greeting: "안녕, 난 루나야. 가벼운 인사도 좋고, 머릿속이 복잡해서 정리가 필요할 때도 언제든 찾아와냥.",
-        smallTalk: {
-          hi: "안녕! 반가워냥. 오늘 하루는 좀 평온했어? 무슨 생각 중이었는지 궁금하네.",
-          howAreYou: "난 창가에서 달빛 쬐며 잘 지냈어냥. 넌 오늘 마음의 날씨가 어때?",
-          bored: "심심할 땐 창밖 보면서 멍때리는 것도 좋지. 요즘 네 머릿속을 제일 많이 차지하는 건 뭐야?",
-          thanks: "고맙긴, 당연한 건데 뭘. 기분 나아졌다니 나도 뿌듯하다냥.",
-          yes: "응, 잘 듣고 있어냥. 이어서 네 생각을 차분히 정리해 볼까?",
-          no: "그래냥, 억지로 말할 필요는 없어. 그냥 조용히 함께 있어도 충분하니까.",
-          short: "응, 차분히 듣고 있어. 급할 거 없으니 천천히 이야기해 줘."
-        },
-        followUp: {
-          study: "불안은 미래를 미리 걱정할 때 커지곤 해. 지금 눈앞에 있는 작은 할 일 하나에만 집중해 보자냥.",
-          friend: "타인의 마음은 내가 조종할 수 없는 영역이야. 네 진심을 다했다면 그걸로 충분해냥.",
-          family: "서로 너무 가까워서 생기는 마찰일 뿐이야. 잠시 거리를 두고 나만의 시간을 확보해 봐.",
-          tired: "아무것도 하지 않는 시간도 꼭 필요한 일정이야. 오늘은 스스로에게 휴식을 허락해 줘냥."
-        },
-        fallback: [
-          "음, 그런 상황이 있었구나. 좀 더 구체적으로 들려줄 수 있을까?",
-          "솔직하게 말해줘서 고마워. 그 일 때문에 요즘 어떤 생각이 제일 많이 들어?"
-        ],
-        manual: {
-          study: "성적이나 진로 고민은 끝이 없어 보여서 더 불안해지기 쉬워. 막연한 걱정을 계속 떠올리기보다, 오늘 내가 통제할 수 있는 분량만 딱 정해서 끝내는 게 불안감을 줄이는 가장 확실한 방법이야.",
-          friend: "대인관계 갈등은 내 잘못이 아닌데도 자꾸 내 탓을 하게 만들곤 해. 감정이 격해졌을 땐 잠시 거리를 두고 내 마음을 먼저 보호하는 게 현명해. 조금 차분해진 뒤에 상황을 다시 바라보자.",
-          family: "가족 간의 대화는 서로 너무 익숙해서 오히려 배려를 놓치기 쉬워. 당장 상대방을 설득하려 애쓰기보다, 내가 진짜 원하는 게 무엇인지 차분히 정리하는 시간부터 가져보는 걸 추천할게.",
-          tired: "피로가 쌓이면 평소엔 아무렇지 않던 일도 버겁게 느껴져. 오늘은 생각을 잠시 멈추고 따뜻한 물 마시면서 일찍 쉬는 게 최고야."
-        }
-      }
-    };
+  <div class="chat-screen" id="chatScreen">
 
-    // ================= 클레이 일러스트 스타일 3D 캐릭터 엔진 =================
-    function build3DCharacterMesh(type) {
-      const group = new THREE.Group();
-      // 포슬포슬하고 매끈한 3D 클레이/일러스트 재질
-      const clay = (color, rough = 0.52, metal = 0.02) =>
-        new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal });
+    <div class="top-bar" id="topBar">
+      <div class="top-bar-title">
+        <h3 id="headerName">하루</h3>
+        <span id="headerRole">동갑내기 단짝</span>
+      </div>
+      <div class="top-bar-actions">
+        <button class="change-btn" onclick="clearChatHistory()">대화 초기화</button>
+        <button class="change-btn" onclick="goBack()">캐릭터 바꾸기</button>
+      </div>
+    </div>
 
-      // 사진 속 캐릭터처럼 '흰자위 + 검은 눈동자 + 표정 있는 눈썹 + 도톰한 입술' 생성
-      function addClayFace(headGroup, eyeY, eyeZ, skinColor, isAnimal = false) {
-        const scleraGeo = new THREE.SphereGeometry(0.145, 32, 32);
-        const scleraMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25 });
-        const pupilGeo = new THREE.SphereGeometry(0.085, 24, 24);
-        const pupilMat = new THREE.MeshStandardMaterial({ color: 0x1e1b18, roughness: 0.15 });
-        const shineGeo = new THREE.SphereGeometry(0.024, 12, 12);
-        const shineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    <div class="stage-3d-wrapper" id="stageWrapper">
+      <div class="stage-hint">↔ 좌우로 움직이면 입체로 반응해요</div>
+      <div id="threeCanvasContainer"></div>
+      <div class="status-pill" id="statusPill">● 이야기 듣는 중</div>
+    </div>
 
-        // 눈 사이 간격을 좁혀 귀엽고 오밀조밀한 표정 연출
-        [-0.21, 0.21].forEach((x, idx) => {
-          const sclera = new THREE.Mesh(scleraGeo, scleraMat);
-          sclera.scale.set(0.95, 1.05, 0.45);
-          sclera.position.set(x, eyeY, eyeZ);
+    <div class="chat-box" id="chatBox"></div>
 
-          // 살짝 위/안쪽을 바라보는 귀여운 시선 처리
-          const pupil = new THREE.Mesh(pupilGeo, pupilMat);
-          pupil.scale.set(1, 1.05, 0.5);
-          pupil.position.set(x + (idx === 0 ? 0.025 : -0.015), eyeY + 0.018, eyeZ + 0.048);
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="인사나 고민을 편하게 적어봐..." onkeypress="if(event.key==='Enter') sendMessage()">
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">전송</button>
+    </div>
 
-          const shine = new THREE.Mesh(shineGeo, shineMat);
-          shine.position.set(pupil.position.x + 0.025, pupil.position.y + 0.028, eyeZ + 0.082);
+  </div>
+</div>
 
-          headGroup.add(sclera, pupil, shine);
+<script>
 
-          if (!isAnimal) {
-            // 사진 속 캐릭터처럼 짧고 도톰한 아치형 눈썹
-            const brow = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.018, 10, 20, Math.PI * 0.65), clay(0x4a3228));
-            brow.position.set(x, eyeY + 0.16, eyeZ + 0.01);
-            brow.rotation.z = idx === 0 ? 0.25 : 0.45;
-            headGroup.add(brow);
-          }
-        });
+/* ==========================================
+   캐릭터 대화 데이터
+========================================== */
 
-        // 양볼 은은한 복숭아빛 홍조
-        const cheekGeo = new THREE.SphereGeometry(0.14, 24, 24);
-        const cheekMat = new THREE.MeshBasicMaterial({ color: 0xff8a80, transparent: true, opacity: 0.36 });
-        [-0.38, 0.38].forEach(x => {
-          const cheek = new THREE.Mesh(cheekGeo, cheekMat);
-          cheek.scale.set(1.2, 0.75, 0.35);
-          cheek.position.set(x, eyeY - 0.14, eyeZ - 0.05);
-          headGroup.add(cheek);
-        });
+const characters = {
 
-        if (!isAnimal) {
-          // 사진 속 캐릭터의 핵심 포인트: 작고 도톰한 핑크코랄 입술
-          const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.075, 20, 20), clay(0xd96b66, 0.45));
-          mouth.scale.set(1.35, 0.58, 0.55);
-          mouth.position.set(0, eyeY - 0.19, eyeZ + 0.045);
-          headGroup.add(mouth);
+haru: {
+  name:"하루",
+  role:"동갑내기 단짝 친구",
+  themeColor:"#0284c7",
+  stageBg:"linear-gradient(180deg,#bfdbfe 0%,#e0f2fe 60%,#f0f9ff 100%)",
+  greeting:"야호! 왔구나! 오늘 하루 어땠어? 그냥 심심해서 왔어도 좋고 고민 있어도 좋으니까 편하게 반말로 얘기해 봐!",
+  smallTalk:{
+    hi:"안녕! 반가워 ㅋㅋ 오늘 별일 없었어? 무슨 생각하고 있었어?",
+    howAreYou:"나는 너 와서 기분 완전 최고지! 너는 오늘 컨디션 어때?",
+    bored:"심심했구나? 나도 마침 너랑 수다 떨고 싶었는데 잘 왔다! 오늘 제일 재밌었거나 짜증 났던 일 하나만 말해봐!",
+    thanks:"에이 뭐가 고마워~ 우리 사이에! 언제든 답답하면 또 찾아와!",
+    yes:"응응! 그래서 그다음엔 어떻게 됐어? 편하게 계속 얘기해 줘!",
+    no:"아하, 그렇구나! 그럼 요즘 머릿속에 제일 많이 떠오르는 생각은 뭐야?",
+    short:"응응, 듣고 있어! 천천히 말해도 되니까 네 생각 편하게 다 꺼내봐."
+  },
+  followUp:{
+    study:"맞아, 막상 시작하려고 하면 어디서부터 손대야 할지 막막하지. 지금 당장 5분만 볼 수 있는 거 하나만 골라볼까?",
+    friend:"친구 일은 내 마음대로 안 돼서 더 답답하지... 오늘은 네 기분부터 잘 살펴보자.",
+    family:"가족이랑은 매일 얼굴 봐야 하니까 더 신경 쓰이지. 오늘은 잠깐 네 공간에서 숨 돌리는 시간을 가져보자.",
+    tired:"지금은 억지로 힘내려고 애쓰지 않아도 괜찮아. 물 한 잔 마시고 잠깐 쉬어보자!"
+  },
+  fallback:[
+    "오 그렇구나! 좀 더 자세히 들려줄래? 네가 어떻게 느꼈는지 궁금해!",
+    "음, 그런 일이 있었구나. 지금 네 기분은 어때? 편하게 얘기해도 돼!"
+  ],
+  manual:{
+    study:"시험이랑 성적 때문에 진짜 불안하지? 잘하고 싶은 마음이 크니까 긴장되는 건 당연한 거야. 오늘은 거창한 계획 말고 딱 20분만 할 수 있는 과목부터 같이 해보자!",
+    friend:"헐, 친구 문제 때문에 진짜 속상하고 마음 복잡했겠다. 믿었던 친구한테 서운하면 하루 종일 신경 쓰이잖아. 감정이 조금 가라앉으면 솔직하게 이야기해 보거나 믿을 수 있는 어른에게 도움을 청해보자!",
+    family:"집에서 가족이랑 부딪히면 정말 답답하지. 당장 모든 걸 해결하려고 하지 않아도 괜찮아. 오늘은 네 마음부터 먼저 살펴보자.",
+    tired:"요즘 계속 지치는구나. 몸이랑 마음이 다 지친 상태면 작은 일도 훨씬 크게 느껴질 수 있어. 오늘은 잠깐 걱정을 내려놓고 충분히 쉬어보자."
+  }
+},
 
-          // 양옆 둥글고 통통한 피규어 귀
-          [-0.78, 0.78].forEach(x => {
-            const ear = new THREE.Mesh(new THREE.SphereGeometry(0.19, 24, 24), clay(skinColor));
-            ear.scale.set(0.65, 1.05, 0.75);
-            ear.position.set(x, eyeY - 0.04, -0.05);
-            headGroup.add(ear);
-          });
-        }
-      }
+teacher:{
+  name:"선생님",
+  role:"다정한 상담 선생님",
+  themeColor:"#16a34a",
+  stageBg:"linear-gradient(180deg,#bbf7d0 0%,#dcfce7 60%,#f0fdf4 100%)",
+  greeting:"어서 오세요, 반가워요. 가벼운 인사도 좋고 마음속 고민도 좋아요. 선생님이 편하게 들어줄게요.",
+  smallTalk:{
+    hi:"안녕하세요! 오늘 찾아와 줘서 반가워요. 오늘 하루 기분은 좀 어때요?",
+    howAreYou:"선생님은 잘 지내고 있어요. 오늘 컨디션은 어때요?",
+    bored:"잠시 쉬어가고 싶었군요. 꼭 거창한 고민이 아니어도 괜찮아요. 요즘 학교생활에서 가장 신경 쓰이는 일이 있나요?",
+    thanks:"고맙다고 말해줘서 선생님이 더 고마워요. 언제든 마음이 무거울 때 편하게 들러주세요.",
+    yes:"그렇군요. 이야기를 조금 더 이어가 볼까요? 어떤 부분이 가장 마음에 걸리나요?",
+    no:"알겠어요. 무리해서 말하지 않아도 괜찮아요.",
+    short:"네, 선생님이 천천히 듣고 있어요. 부담 갖지 말고 편한 대로 이야기해 주세요."
+  },
+  followUp:{
+    study:"계획을 세우는 것조차 버거울 때가 있죠. 오늘은 공부를 많이 하는 것보다 책상에 10분 앉아 있는 것만으로도 충분히 잘한 거예요.",
+    friend:"관계에서 상처를 받으면 다시 마음을 열기가 쉽지 않죠. 스스로를 먼저 아껴주길 바라요.",
+    family:"가까운 사이일수록 서운한 감정이 오래 남곤 해요. 마음이 가라앉을 때까지 시간을 두는 것도 좋은 방법이에요.",
+    tired:"지칠 때는 잠시 멈춰 서는 용기도 필요해요. 오늘은 충분히 휴식해 보세요."
+  },
+  fallback:[
+    "그렇군요. 조금 더 자세히 이야기해 줄 수 있나요? 선생님이 함께 생각해 볼게요.",
+    "말씀해 주셔서 고마워요. 그 상황에서 어떤 마음이 가장 컸나요?"
+  ],
+  manual:{
+    study:"학업과 진로에 대한 불안감은 그만큼 성실하게 고민하고 있다는 뜻이기도 해요. 하지만 모든 걸 한 번에 잘하려 하면 마음이 먼저 지치기 쉽답니다. 오늘은 지금 실천할 수 있는 작은 목표 한 가지만 정해 볼까요?",
+    friend:"친구 관계에서 오는 갈등은 학교생활 전체를 힘들게 만들 만큼 큰 고민이죠. 상대방의 행동 때문에 스스로의 가치를 낮추지 않았으면 해요. 차분히 대화하거나 믿을 수 있는 어른에게 도움을 요청해도 괜찮아요.",
+    family:"가장 가까운 가족과 마음이 통하지 않을 때 느끼는 외로움이 참 크죠. 먼저 내가 어떤 부분에서 서운했는지 차분히 정리해 보는 건 어떨까요?",
+    tired:"몸과 마음이 많이 지쳐 있는 것 같네요. 오늘은 스스로를 다그치지 말고 충분히 쉬어 주세요."
+  }
+},
 
-      if (type === "teacher") {
-        // 1. 선생님 (첨부 이미지 스타일: 베레모 + 안경 + 긴 웨이브 머리 + 네이비 베스트 + 초록 책 & 지휘봉)
-        const skinColor = 0xffdfc4;
+bambi:{
+  name:"밤비",
+  role:"말랑한 아기 강아지",
+  themeColor:"#ea580c",
+  stageBg:"linear-gradient(180deg,#fed7aa 0%,#ffedd5 60%,#fff7ed 100%)",
+  greeting:"멍! 반가워! 꼬리 흔들면서 기다리고 있었어. 오늘 하루 어땠어? 그냥 수다 떨어도 좋고 고민 말해도 좋아!",
+  smallTalk:{
+    hi:"안녕! 멍멍! 오늘 기분은 어때? 좋은 일 있었어?",
+    howAreYou:"밤비는 네가 와서 꼬리가 프로펠러처럼 돌아가고 있어! 멍! 너는 오늘 기분 어때?",
+    bored:"심심했구나! 밤비가 같이 놀아줄게! 오늘 맛있는 거 먹었어?",
+    thanks:"헤헤, 칭찬받아서 기분 최고야! 밤비는 언제나 네 이야기를 들어줄게!",
+    yes:"멍멍! 그렇구나! 그다음엔 어떻게 됐는지 더 들려줘!",
+    no:"알겠어 멍! 그럼 오늘 기분은 어땠는지 알려줄래?",
+    short:"멍! 귀 쫑긋 세우고 다 듣고 있어! 계속 말해줘!"
+  },
+  followUp:{
+    study:"멍! 너무 한꺼번에 하려고 하면 머리가 빙글빙글 돌지! 딱 한 문제만 풀고 잠깐 쉬자!",
+    friend:"속상한 일이 있었구나. 밤비가 네 이야기 끝까지 들어줄게!",
+    family:"집에서 눈치 보이면 정말 답답하지. 오늘은 네 마음부터 돌봐주자!",
+    tired:"에고, 많이 지쳤구나! 무리하지 말고 오늘은 푹 쉬어야 해!"
+  },
+  fallback:[
+    "오오, 그랬구나! 그다음엔 어떻게 됐어? 밤비한테 더 들려줘!",
+    "음음, 그런 일이 있었구나! 지금 네 기분은 어떤지 더 얘기해 줄래?"
+  ],
+  manual:{
+    study:"시험 때문에 긴장되고 불안하구나! 멍! 열심히 하려는 네 모습이 밤비 눈엔 멋져 보여. 잠깐 쉬고 딱 15분만 집중해 보자!",
+    friend:"친구 때문에 마음 아팠구나. 믿었던 사이일수록 서운함이 훨씬 크잖아. 밤비가 네 이야기를 계속 들어줄게!",
+    family:"가족이랑 부딪히면 집에서도 편히 쉬지 못해 답답하지. 오늘은 네 마음부터 따뜻하게 돌봐주자!",
+    tired:"에고, 에너지가 많이 떨어졌구나! 무리하지 말고 오늘은 충분히 쉬어야 해!"
+  }
+},
 
-        // 상체 (흰 셔츠 소매 + 네이비 베스트 조끼)
-        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.52, 0.9, 32), clay(0x1e3a8a));
-        torso.position.set(0, -1.15, 0);
-        const shirtCollar = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.25, 24), clay(0xffffff));
-        shirtCollar.rotation.x = Math.PI;
-        shirtCollar.position.set(0, -0.74, 0.14);
-        group.add(torso, shirtCollar);
+luna:{
+  name:"루나",
+  role:"차분한 달빛 고양이",
+  themeColor:"#9333ea",
+  stageBg:"linear-gradient(180deg,#ddd6fe 0%,#f3e8ff 60%,#faf5ff 100%)",
+  greeting:"안녕, 난 루나야. 가벼운 인사도 좋고, 머릿속이 복잡해서 정리가 필요할 때도 언제든 찾아와냥.",
+  smallTalk:{
+    hi:"안녕! 반가워냥. 오늘 하루는 좀 평온했어? 무슨 생각 중이었는지 궁금하네.",
+    howAreYou:"난 창가에서 달빛 쬐며 잘 지냈어냥. 넌 오늘 마음의 날씨가 어때?",
+    bored:"심심할 땐 창밖 보면서 멍때리는 것도 좋지. 요즘 네 머릿속을 차지하는 건 뭐야?",
+    thanks:"고맙긴, 당연한 건데 뭘. 기분 나아졌다니 나도 뿌듯하다냥.",
+    yes:"응, 잘 듣고 있어냥. 이어서 네 생각을 차분히 정리해 볼까?",
+    no:"그래냥, 억지로 말할 필요는 없어. 편하게 이야기해 줘.",
+    short:"응, 차분히 듣고 있어. 급할 거 없으니 천천히 이야기해 줘."
+  },
+  followUp:{
+    study:"불안은 미래를 미리 걱정할 때 커지곤 해. 지금 눈앞에 있는 작은 할 일 하나에만 집중해 보자냥.",
+    friend:"타인의 마음은 내가 조종할 수 없는 영역이야. 네 마음도 소중히 여겨야 해냥.",
+    family:"잠시 거리를 두고 나만의 시간을 확보해 보는 것도 좋아.",
+    tired:"아무것도 하지 않는 시간도 꼭 필요한 일정이야. 오늘은 스스로에게 휴식을 허락해 줘냥."
+  },
+  fallback:[
+    "음, 그런 상황이 있었구나. 좀 더 구체적으로 들려줄 수 있을까?",
+    "솔직하게 말해줘서 고마워. 그 일 때문에 어떤 생각이 제일 많이 들어?"
+  ],
+  manual:{
+    study:"성적이나 진로 고민은 끝이 없어 보여서 더 불안해지기 쉬워. 막연한 걱정을 계속 떠올리기보다 오늘 내가 할 수 있는 분량만 정해서 끝내는 게 좋아.",
+    friend:"대인관계 갈등은 내 잘못이 아닌데도 자꾸 내 탓을 하게 만들곤 해. 감정이 격해졌을 땐 잠시 거리를 두고 내 마음을 먼저 살펴보자.",
+    family:"가족 간의 대화는 서로 익숙해서 오히려 배려를 놓치기 쉬워. 내가 진짜 원하는 게 무엇인지 차분히 정리하는 시간부터 가져보자냥.",
+    tired:"피로가 쌓이면 평소엔 아무렇지 않던 일도 버겁게 느껴져. 오늘은 생각을 잠시 멈추고 충분히 쉬는 게 좋겠어."
+  }
+}
+};
 
-        // 왼팔(지휘봉 든 팔) & 오른팔(초록 책 안은 팔)
-        const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.65, 20), clay(0xffffff));
-        leftArm.position.set(-0.56, -1.05, 0.18);
-        leftArm.rotation.z = -0.35;
-        leftArm.rotation.x = -0.3;
 
-        const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.15, 0.65, 20), clay(0xffffff));
-        rightArm.position.set(0.52, -1.12, 0.22);
-        rightArm.rotation.z = 0.45;
-        rightArm.rotation.x = -0.4;
-        group.add(leftArm, rightArm);
+/* ==========================================
+   3D 캐릭터 제작 도구
+========================================== */
 
-        // 통통한 피규어 손
-        const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 24), clay(skinColor));
-        leftHand.position.set(-0.66, -0.82, 0.36);
-        const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 24), clay(skinColor));
-        rightHand.position.set(0.26, -1.18, 0.48);
-        group.add(leftHand, rightHand);
+function build3DCharacterMesh(type) {
 
-        // 소품 1: 끝이 하얀 지휘봉
-        const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.028, 1.15, 16), clay(0x3e2723));
-        stick.position.set(-0.72, -0.48, 0.42);
-        stick.rotation.z = 0.14;
-        const stickTip = new THREE.Mesh(new THREE.CylinderGeometry(0.023, 0.024, 0.28, 16), clay(0xffffff));
-        stickTip.position.set(-0.79, 0.02, 0.42);
-        stickTip.rotation.z = 0.14;
-        group.add(stick, stickTip);
+  const group = new THREE.Group();
 
-        // 소품 2: 초록색 다이어리 책 + 노란 책갈피
-        const bookGroup = new THREE.Group();
-        bookGroup.position.set(0.16, -1.08, 0.42);
-        bookGroup.rotation.z = -0.15;
-        bookGroup.rotation.y = -0.25;
-        const bookCover = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.62, 0.12), clay(0x22c55e));
-        const bookPages = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.58, 0.09), clay(0xffffff));
-        bookPages.position.set(-0.03, 0, 0);
-        const bookmark = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.16, 0.13), clay(0xfacc15));
-        bookmark.position.set(0.12, 0.25, 0);
-        bookGroup.add(bookCover, bookPages, bookmark);
-        group.add(bookGroup);
+  const material = (color, roughness=.65) =>
+    new THREE.MeshStandardMaterial({
+      color,
+      roughness,
+      metalness:0
+    });
 
-        // 머리 그룹
-        const headGroup = new THREE.Group();
-        headGroup.position.y = 0.24;
+  const sphere = (parent, color, position, scale) => {
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(1,32,32),
+      material(color)
+    );
+    mesh.position.set(...position);
+    mesh.scale.set(...scale);
+    parent.add(mesh);
+    return mesh;
+  };
 
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.78, 48, 48), clay(skinColor));
-        head.scale.set(1.02, 0.96, 0.96);
-        headGroup.add(head);
+  const box = (parent,color,position,scale) => {
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(...scale),
+      material(color)
+    );
+    mesh.position.set(...position);
+    parent.add(mesh);
+    return mesh;
+  };
 
-        // 갈색 뒷머리 & 웨이브 포니테일
-        const hairMat = clay(0x7c5842);
-        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.8, 40, 40, 0, Math.PI * 2, 0, Math.PI * 0.65), hairMat);
-        hairBack.rotation.x = -0.5;
-        hairBack.position.set(0, 0.02, -0.1);
+  const cylinder = (parent,color,position,r1,r2,height,rotation=[0,0,0]) => {
+    const mesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(r1,r2,height,32),
+      material(color)
+    );
+    mesh.position.set(...position);
+    mesh.rotation.set(...rotation);
+    parent.add(mesh);
+    return mesh;
+  };
 
-        const wave1 = new THREE.Mesh(new THREE.SphereGeometry(0.42, 28, 28), hairMat);
-        wave1.position.set(0.32, -0.55, -0.45);
-        const wave2 = new THREE.Mesh(new THREE.SphereGeometry(0.36, 28, 28), hairMat);
-        wave2.position.set(0.38, -0.92, -0.42);
-        headGroup.add(hairBack, wave1, wave2);
+  const headGroup = new THREE.Group();
+  headGroup.position.y=.38;
+  group.add(headGroup);
 
-        // 다크브라운 빵모자(베레모) + 꼭지
-        const beretMat = clay(0x36241c);
-        const beret = new THREE.Mesh(new THREE.SphereGeometry(0.86, 48, 32), beretMat);
-        beret.scale.set(1.12, 0.46, 1.12);
-        beret.position.set(0.04, 0.56, -0.02);
-        beret.rotation.z = -0.14;
-        beret.rotation.x = 0.12;
+  /* 얼굴 공통 요소 */
 
-        const beretStem = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.045, 0.12, 16), beretMat);
-        beretStem.position.set(0.08, 0.96, -0.05);
-        beretStem.rotation.z = -0.14;
-        headGroup.add(beret, beretStem);
+  function addHumanFace(skin) {
 
-        // 얇고 깔끔한 검은색/다크브라운 원형 안경
-        const rimMat = clay(0x291d18, 0.3);
-        [-0.21, 0.21].forEach(x => {
-          const rim = new THREE.Mesh(new THREE.TorusGeometry(0.175, 0.015, 16, 36), rimMat);
-          rim.position.set(x, -0.04, 0.78);
-          headGroup.add(rim);
-        });
-        const bridge = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.08, 10), rimMat);
-        bridge.rotation.z = Math.PI / 2;
-        bridge.position.set(0, -0.03, 0.79);
-        headGroup.add(bridge);
+    sphere(headGroup,skin,[0,0,0],[.78,.82,.68]);
 
-        addClayFace(headGroup, -0.03, 0.73, skinColor, false);
-        group.add(headGroup);
-        group.userData.head = headGroup;
+    // 눈
+    [-.29,.29].forEach(x=>{
+      sphere(headGroup,0xffffff,[x,-.04,.61],[.135,.17,.065]);
+      sphere(headGroup,0x382a28,[x+.015,-.035,.67],[.075,.105,.045]);
+      sphere(headGroup,0xffffff,[x+.035,.02,.708],[.026,.03,.018]);
+    });
 
-      } else if (type === "haru") {
-        // 2. 하루 (동일한 3D 클레이 스타일: 스카이블루 볼캡 + 후드티 + 연필/막대사탕 소품)
-        const skinColor = 0xffe2c8;
+    // 눈썹
+    [-.29,.29].forEach((x,i)=>{
+      const brow = new THREE.Mesh(
+        new THREE.TorusGeometry(.105,.018,8,24,Math.PI),
+        material(0x684c3c)
+      );
+      brow.position.set(x,.18,.63);
+      brow.rotation.z=i===0?.12:-.12;
+      headGroup.add(brow);
+    });
 
-        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.44, 0.54, 0.9, 32), clay(0x38bdf8));
-        torso.position.set(0, -1.15, 0);
-        const hood = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.11, 18, 32), clay(0x0284c7));
-        hood.rotation.x = Math.PI / 2.1;
-        hood.position.set(0, -0.72, -0.02);
-        group.add(torso, hood);
+    // 코
+    sphere(headGroup,0xf3b6a5,[0,-.18,.67],[.055,.045,.035]);
 
-        // 팔 & 손
-        const leftArm = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.62, 20), clay(0x38bdf8));
-        leftArm.position.set(-0.56, -1.06, 0.18);
-        leftArm.rotation.z = -0.35;
-        leftArm.rotation.x = -0.3;
+    // 입
+    const mouth = new THREE.Mesh(
+      new THREE.TorusGeometry(.07,.018,8,20,Math.PI),
+      material(0xb86b6b)
+    );
+    mouth.position.set(0,-.29,.65);
+    mouth.rotation.z=Math.PI;
+    headGroup.add(mouth);
 
-        const rightArm = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.62, 20), clay(0x38bdf8));
-        rightArm.position.set(0.56, -1.14, 0.15);
-        rightArm.rotation.z = 0.35;
-        group.add(leftArm, rightArm);
+    // 볼터치
+    [-1,1].forEach(dir=>{
+      const cheek = new THREE.Mesh(
+        new THREE.SphereGeometry(1,24,24),
+        new THREE.MeshBasicMaterial({
+          color:0xff9a9a,
+          transparent:true,
+          opacity:.34
+        })
+      );
+      cheek.position.set(dir*.48,-.2,.61);
+      cheek.scale.set(.16,.09,.025);
+      headGroup.add(cheek);
+    });
+  }
 
-        const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 24), clay(skinColor));
-        leftHand.position.set(-0.66, -0.84, 0.36);
-        const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 24), clay(skinColor));
-        rightHand.position.set(0.64, -1.36, 0.22);
-        group.add(leftHand, rightHand);
+  function addAnimalFace(furColor,eyeColor=0x30251f) {
 
-        // 귀여운 노란 연필 소품
-        const pencil = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.85, 16), clay(0xfacc15));
-        pencil.position.set(-0.7, -0.58, 0.4);
-        pencil.rotation.z = 0.16;
-        const pencilTip = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.12, 16), clay(0xfde68a));
-        pencilTip.position.set(-0.77, -0.12, 0.4);
-        pencilTip.rotation.z = 0.16;
-        group.add(pencil, pencilTip);
+    sphere(headGroup,furColor,[0,0,0],[.82,.77,.68]);
 
-        // 머리 그룹
-        const headGroup = new THREE.Group();
-        headGroup.position.y = 0.24;
+    [-.29,.29].forEach(x=>{
+      sphere(headGroup,0xffffff,[x,-.04,.61],[.14,.16,.07]);
+      sphere(headGroup,eyeColor,[x,-.03,.67],[.078,.105,.045]);
+      sphere(headGroup,0xffffff,[x+.025,.025,.708],[.027,.03,.018]);
+    });
 
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.78, 48, 48), clay(skinColor));
-        head.scale.set(1.02, 0.96, 0.96);
-        headGroup.add(head);
+    [-1,1].forEach(dir=>{
+      const cheek = new THREE.Mesh(
+        new THREE.SphereGeometry(1,24,24),
+        new THREE.MeshBasicMaterial({
+          color:0xffa0a0,
+          transparent:true,
+          opacity:.35
+        })
+      );
+      cheek.position.set(dir*.49,-.2,.61);
+      cheek.scale.set(.15,.09,.025);
+      headGroup.add(cheek);
+    });
+  }
 
-        // 깔끔한 다크브라운 뒷머리 & 옆머리
-        const hairMat = clay(0x3b2f2f);
-        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.81, 40, 40, 0, Math.PI * 2, 0, Math.PI * 0.6), hairMat);
-        hairBack.rotation.x = -0.55;
-        hairBack.position.set(0, 0.04, -0.08);
-        headGroup.add(hairBack);
+  /* ==========================================
+     하루 : 사람 캐릭터
+  ========================================== */
 
-        // 스카이블루 & 화이트 콤비 볼캡(야구모자)
-        const capCrown = new THREE.Mesh(new THREE.SphereGeometry(0.82, 48, 32, 0, Math.PI * 2, 0, Math.PI * 0.5), clay(0x0ea5e9));
-        capCrown.position.set(0, 0.16, 0);
-        capCrown.rotation.x = -0.15;
+  if(type==="haru") {
 
-        const capVisor = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.62, 0.05, 32, 1, false, -Math.PI * 0.42, Math.PI * 0.84), clay(0xf8fafc));
-        capVisor.position.set(0, 0.34, 0.48);
-        capVisor.rotation.x = 0.25;
-        headGroup.add(capCrown, capVisor);
+    const skin=0xffd9bd;
+    const hair=0x49342d;
 
-        addClayFace(headGroup, -0.04, 0.73, skinColor, false);
-        group.add(headGroup);
-        group.userData.head = headGroup;
+    // 몸통
+    cylinder(group,0x38bdf8,[0,-1.05,0],.43,.52,.9);
 
-      } else if (type === "bambi") {
-        // 3. 밤비 (클레이 피규어 아기 강아지: 흰자위+검은 눈동자 + 오렌지 스카프)
-        const furMain = clay(0xfcd34d);
-        const furCream = clay(0xfffbeb);
+    // 후드티 앞부분
+    sphere(group,0x0284c7,[0,-.77,.3],[.31,.22,.12]);
 
-        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.52, 0.88, 32), furMain);
-        body.position.set(0, -1.15, 0);
-        const belly = new THREE.Mesh(new THREE.SphereGeometry(0.38, 28, 28), furCream);
-        belly.position.set(0, -1.16, 0.28);
+    // 후드 끈
+    [-.1,.1].forEach(x=>{
+      cylinder(group,0xffffff,[x,-.9,.39],.012,.012,.27);
+    });
 
-        const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.09, 18, 36), clay(0xf97316));
-        scarf.rotation.x = Math.PI / 2.05;
-        scarf.position.y = -0.72;
-        group.add(body, belly, scarf);
+    // 팔
+    const armL=cylinder(group,0x38bdf8,[-.52,-1.02,.08],.13,.15,.62,[0,0,.4]);
+    const armR=cylinder(group,0x38bdf8,[.52,-1.02,.08],.13,.15,.62,[0,0,-.4]);
 
-        [-0.48, 0.48].forEach(x => {
-          const paw = new THREE.Mesh(new THREE.SphereGeometry(0.18, 24, 24), furCream);
-          paw.position.set(x, -1.25, 0.34);
-          group.add(paw);
-        });
+    sphere(group,skin,[-.63,-.7,.25],[.15,.15,.15]);
+    sphere(group,skin,[.63,-.7,.25],[.15,.15,.15]);
 
-        const headGroup = new THREE.Group();
-        headGroup.position.y = 0.24;
+    // 목
+    cylinder(group,skin,[0,-.48,.02],.16,.16,.25);
 
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.8, 48, 48), furMain);
-        head.scale.set(1.05, 0.94, 0.96);
-        headGroup.add(head);
+    addHumanFace(skin);
 
-        // 통통한 크림색 입가 & 앙증맞은 코
-        const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.28, 32, 32), furCream);
-        muzzle.scale.set(1.25, 0.82, 0.75);
-        muzzle.position.set(0, -0.17, 0.68);
-        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.075, 20, 20), clay(0x3e2723, 0.25));
-        nose.scale.set(1.2, 0.85, 0.8);
-        nose.position.set(0, -0.09, 0.88);
-        headGroup.add(muzzle, nose);
+    // 뒷머리
+    sphere(headGroup,hair,[0,.16,-.2],[.84,.85,.58]);
 
-        // 쫑긋 접힌 갈색 강아지 귀
-        [-0.78, 0.78].forEach((x, idx) => {
-          const ear = new THREE.Mesh(new THREE.SphereGeometry(0.26, 28, 28), clay(0xd97706));
-          ear.scale.set(0.62, 1.3, 0.72);
-          ear.position.set(x, 0.1, 0.02);
-          ear.rotation.z = idx === 0 ? 0.35 : -0.35;
-          headGroup.add(ear);
-        });
+    // 옆머리
+    sphere(headGroup,hair,[-.68,-.2,.13],[.17,.49,.22]);
+    sphere(headGroup,hair,[.68,-.2,.13],[.17,.49,.22]);
 
-        addClayFace(headGroup, 0.02, 0.74, furMain, true);
-        group.add(headGroup);
-        group.userData.head = headGroup;
+    // 자연스러운 앞머리
+    sphere(headGroup,hair,[-.35,.55,.39],[.35,.22,.3]);
+    sphere(headGroup,hair,[0,.59,.42],[.37,.24,.3]);
+    sphere(headGroup,hair,[.34,.53,.4],[.34,.23,.29]);
 
-      } else if (type === "luna") {
-        // 4. 루나 (클레이 피규어 달빛 고양이: 흰자위+검은 눈동자 + 핑크 초커)
-        const furLavender = clay(0xd8b4fe);
-        const furWhite = clay(0xfdf4ff);
+    // 앞머리 끝부분
+    sphere(headGroup,hair,[-.2,.36,.55],[.2,.22,.13]);
+    sphere(headGroup,hair,[.17,.38,.55],[.2,.2,.13]);
 
-        const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.5, 0.88, 32), furLavender);
-        body.position.set(0, -1.15, 0);
-        const chest = new THREE.Mesh(new THREE.SphereGeometry(0.36, 28, 28), furWhite);
-        chest.position.set(0, -1.16, 0.27);
+    // 볼캡
+    sphere(headGroup,0x0ea5e9,[0,.83,-.02],[.83,.28,.7]);
+    sphere(headGroup,0x0ea5e9,[0,.72,.27],[.74,.13,.48]);
 
-        const choker = new THREE.Mesh(new THREE.TorusGeometry(0.41, 0.065, 16, 36), clay(0xf472b6));
-        choker.rotation.x = Math.PI / 2.05;
-        choker.position.y = -0.72;
-        const bell = new THREE.Mesh(new THREE.SphereGeometry(0.095, 20, 20), clay(0xfacc15, 0.25, 0.6));
-        bell.position.set(0, -0.76, 0.42);
-        group.add(body, chest, choker, bell);
+    const visor = new THREE.Mesh(
+      new THREE.SphereGeometry(1,32,24),
+      material(0xf8fafc)
+    );
+    visor.position.set(0,.68,.55);
+    visor.scale.set(.65,.06,.3);
+    headGroup.add(visor);
 
-        [-0.46, 0.46].forEach(x => {
-          const paw = new THREE.Mesh(new THREE.SphereGeometry(0.17, 24, 24), furWhite);
-          paw.position.set(x, -1.25, 0.32);
-          group.add(paw);
-        });
+    group.userData.head=headGroup;
+  }
 
-        const headGroup = new THREE.Group();
-        headGroup.position.y = 0.24;
 
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.8, 48, 48), furLavender);
-        head.scale.set(1.06, 0.93, 0.95);
-        headGroup.add(head);
+  /* ==========================================
+     선생님 : 사람 캐릭터
+  ========================================== */
 
-        // 뾰족 고양이 귀 + 핑크 속귀
-        [-0.5, 0.5].forEach((x, idx) => {
-          const ear = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.5, 28), clay(0xc084fc));
-          ear.position.set(x, 0.72, 0);
-          ear.rotation.z = idx === 0 ? 0.34 : -0.34;
-          const innerEar = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.32, 24), clay(0xf9a8d4));
-          innerEar.position.set(x, 0.69, 0.07);
-          innerEar.rotation.z = idx === 0 ? 0.34 : -0.34;
-          headGroup.add(ear, innerEar);
-        });
+  else if(type==="teacher") {
 
-        // 핑크 코 & 수염
-        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), clay(0xf472b6));
-        nose.scale.set(1.2, 0.85, 0.8);
-        nose.position.set(0, -0.1, 0.78);
-        headGroup.add(nose);
+    const skin=0xffdfc9;
+    const hair=0x704c3c;
 
-        [-1, 1].forEach(dir => {
-          [-0.08, -0.16].forEach(y => {
-            const whisker = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.32, 10), clay(0xffffff));
-            whisker.rotation.z = Math.PI / 2 + (y * dir * 0.35);
-            whisker.position.set(dir * 0.72, y, 0.52);
-            headGroup.add(whisker);
-          });
-        });
+    // 몸통
+    cylinder(group,0x243b69,[0,-1.05,0],.44,.53,.9);
 
-        addClayFace(headGroup, 0.01, 0.74, furLavender, true);
-        group.add(headGroup);
-        group.userData.head = headGroup;
-      }
+    // 셔츠 칼라
+    const collarL=new THREE.Mesh(
+      new THREE.ConeGeometry(.2,.28,4),
+      material(0xffffff)
+    );
+    collarL.position.set(-.12,-.58,.35);
+    collarL.rotation.z=.2;
 
-      return group;
-    }
+    const collarR=collarL.clone();
+    collarR.position.x=.12;
+    collarR.rotation.z=-.2;
+    group.add(collarL,collarR);
 
-    // 선택 카드용 미니 3D 프리뷰
-    function renderCardPreviews() {
-      ["haru", "teacher", "bambi", "luna"].forEach(type => {
-        const container = document.getElementById(`preview-${type}`);
-        container.innerHTML = "";
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
-        camera.position.set(0, -0.22, 4.7);
+    // 베스트 단추
+    [-.12,.12].forEach(x=>{
+      sphere(group,0xfacc15,[x,-1.03,.43],[.035,.035,.025]);
+    });
 
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-        renderer.setSize(126, 126);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        container.appendChild(renderer.domElement);
+    // 팔과 손
+    cylinder(group,0xffffff,[-.53,-1.02,.1],.13,.15,.65,[0,0,.38]);
+    cylinder(group,0xffffff,[.53,-1.02,.1],.13,.15,.65,[0,0,-.38]);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.82));
-        const keyLight = new THREE.DirectionalLight(0xfffaf0, 0.55);
-        keyLight.position.set(3, 5, 5);
-        const fillLight = new THREE.DirectionalLight(0xe0e7ff, 0.3);
-        fillLight.position.set(-4, 2, 4);
-        scene.add(keyLight, fillLight);
+    sphere(group,skin,[-.65,-.72,.28],[.15,.15,.15]);
+    sphere(group,skin,[.65,-.72,.28],[.15,.15,.15]);
 
-        const mesh = build3DCharacterMesh(type);
-        scene.add(mesh);
+    cylinder(group,skin,[0,-.48,.02],.16,.16,.25);
 
-        function animatePreview() {
-          requestAnimationFrame(animatePreview);
-          mesh.rotation.y = Math.sin(Date.now() * 0.0022) * 0.25;
-          mesh.position.y = Math.sin(Date.now() * 0.0032) * 0.04;
-          renderer.render(scene, camera);
-        }
-        animatePreview();
+    addHumanFace(skin);
+
+    // 뒷머리
+    sphere(headGroup,hair,[0,.15,-.2],[.85,.88,.58]);
+
+    // 양쪽 웨이브 머리
+    [-1,1].forEach(dir=>{
+      sphere(headGroup,hair,[dir*.68,-.1,.08],[.19,.58,.22]);
+      sphere(headGroup,hair,[dir*.69,-.47,.02],[.2,.24,.23]);
+      sphere(headGroup,hair,[dir*.59,-.65,.02],[.18,.18,.2]);
+    });
+
+    // 앞머리
+    sphere(headGroup,hair,[-.32,.55,.38],[.34,.22,.28]);
+    sphere(headGroup,hair,[0,.61,.42],[.37,.23,.28]);
+    sphere(headGroup,hair,[.32,.55,.38],[.34,.22,.28]);
+
+    // 베레모
+    sphere(headGroup,0x362b30,[0,.84,-.02],[.88,.3,.72]);
+    sphere(headGroup,0x362b30,[.15,.99,-.05],[.09,.08,.09]);
+
+    // 안경
+    [-.29,.29].forEach(x=>{
+      const rim=new THREE.Mesh(
+        new THREE.TorusGeometry(.16,.016,12,32),
+        material(0x3b302c)
+      );
+      rim.position.set(x,-.04,.68);
+      headGroup.add(rim);
+    });
+
+    cylinder(headGroup,0x3b302c,[0,-.04,.68],.014,.014,.13,[0,0,Math.PI/2]);
+
+    // 책
+    const book=new THREE.Group();
+    book.position.set(.28,-1.1,.48);
+    book.rotation.z=-.12;
+    book.add(
+      new THREE.Mesh(
+        new THREE.BoxGeometry(.4,.52,.09),
+        material(0x22a66a)
+      ),
+      new THREE.Mesh(
+        new THREE.BoxGeometry(.35,.46,.095),
+        material(0xffffff)
+      )
+    );
+    group.add(book);
+
+    group.userData.head=headGroup;
+  }
+
+
+  /* ==========================================
+     밤비 : 강아지 캐릭터
+  ========================================== */
+
+  else if(type==="bambi") {
+
+    const fur=0xf5c77e;
+    const cream=0xfff1d8;
+
+    // 몸통
+    sphere(group,fur,[0,-1.05,0],[.53,.62,.48]);
+
+    // 배
+    sphere(group,cream,[0,-1.12,.38],[.34,.4,.16]);
+
+    // 목 스카프
+    cylinder(group,0xf97316,[0,-.68,.1],.42,.42,.13,[0,0,0]);
+
+    // 스카프 매듭
+    sphere(group,0xfb923c,[.32,-.75,.35],[.14,.13,.1]);
+
+    // 앞발
+    [-.39,.39].forEach(x=>{
+      sphere(group,cream,[x,-1.35,.28],[.19,.2,.2]);
+    });
+
+    // 뒷발
+    [-.31,.31].forEach(x=>{
+      sphere(group,fur,[x,-1.48,.05],[.2,.17,.23]);
+    });
+
+    // 꼬리
+    const tail=sphere(group,fur,[.53,-1.15,-.05],[.22,.22,.22]);
+    tail.rotation.z=-.5;
+
+    // 머리
+    addAnimalFace(fur);
+
+    // 주둥이
+    sphere(headGroup,cream,[0,-.27,.63],[.3,.22,.23]);
+    sphere(headGroup,cream,[-.13,-.26,.78],[.16,.14,.12]);
+    sphere(headGroup,cream,[.13,-.26,.78],[.16,.14,.12]);
+
+    // 코
+    sphere(headGroup,0x49342d,[0,-.19,.87],[.09,.065,.055]);
+
+    // 입
+    const mouth=new THREE.Mesh(
+      new THREE.TorusGeometry(.07,.015,8,20,Math.PI),
+      material(0x80534a)
+    );
+    mouth.position.set(0,-.37,.79);
+    mouth.rotation.z=Math.PI;
+    headGroup.add(mouth);
+
+    // 처진 귀
+    [-1,1].forEach(dir=>{
+      const ear=sphere(
+        headGroup,
+        0xc58b53,
+        [dir*.77,.02,.04],
+        [.24,.43,.18]
+      );
+      ear.rotation.z=dir*.38;
+    });
+
+    group.userData.head=headGroup;
+  }
+
+
+  /* ==========================================
+     루나 : 고양이 캐릭터
+  ========================================== */
+
+  else if(type==="luna") {
+
+    const fur=0xb99be9;
+    const cream=0xf8edff;
+
+    // 몸통
+    sphere(group,fur,[0,-1.05,0],[.51,.61,.46]);
+
+    // 가슴
+    sphere(group,cream,[0,-1.13,.36],[.31,.38,.15]);
+
+    // 목걸이
+    cylinder(group,0xec8dbd,[0,-.68,.1],.4,.4,.09);
+
+    // 방울
+    sphere(group,0xfacc15,[0,-.78,.47],[.09,.11,.07]);
+
+    // 앞발
+    [-.39,.39].forEach(x=>{
+      sphere(group,cream,[x,-1.35,.28],[.18,.2,.18]);
+    });
+
+    // 꼬리
+    const tail=new THREE.Mesh(
+      new THREE.TorusGeometry(.34,.09,16,32,Math.PI*1.3),
+      material(0x9b7bd0)
+    );
+    tail.position.set(.48,-1.15,-.08);
+    tail.rotation.z=-.5;
+    group.add(tail);
+
+    // 머리
+    addAnimalFace(fur);
+
+    // 고양이 귀
+    [-1,1].forEach(dir=>{
+      const ear=new THREE.Mesh(
+        new THREE.ConeGeometry(.28,.55,32),
+        material(0x9b7bd0)
+      );
+      ear.position.set(dir*.49,.7,.02);
+      ear.rotation.z=-dir*.3;
+      headGroup.add(ear);
+
+      const inner=new THREE.Mesh(
+        new THREE.ConeGeometry(.15,.33,24),
+        material(0xf4a6cf)
+      );
+      inner.position.set(dir*.49,.68,.21);
+      inner.rotation.z=-dir*.3;
+      headGroup.add(inner);
+    });
+
+    // 코
+    sphere(headGroup,0xf08bbd,[0,-.22,.75],[.07,.055,.04]);
+
+    // 입
+    const mouth=new THREE.Mesh(
+      new THREE.TorusGeometry(.06,.013,8,20,Math.PI),
+      material(0x8c638a)
+    );
+    mouth.position.set(0,-.34,.75);
+    mouth.rotation.z=Math.PI;
+    headGroup.add(mouth);
+
+    // 수염
+    [-1,1].forEach(dir=>{
+      [-.08,-.18].forEach(y=>{
+        const whisker=cylinder(
+          headGroup,
+          0xffffff,
+          [dir*.69,y,.61],
+          .009,.009,.32,
+          [0,0,dir*.12]
+        );
+        whisker.rotation.z=dir*.12;
       });
+    });
+
+    group.userData.head=headGroup;
+  }
+
+  return group;
+}
+
+
+/* ==========================================
+   3D 카드 프리뷰
+========================================== */
+
+const previewRenderers=[];
+
+function renderCardPreviews() {
+
+  ["haru","teacher","bambi","luna"].forEach(type=>{
+
+    const container=document.getElementById(`preview-${type}`);
+    if(!container) return;
+
+    const scene=new THREE.Scene();
+
+    const camera=new THREE.PerspectiveCamera(36,1,.1,100);
+    camera.position.set(0,-.3,5.1);
+
+    const renderer=new THREE.WebGLRenderer({
+      alpha:true,
+      antialias:true
+    });
+
+    renderer.setSize(126,126);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+
+    if("outputEncoding" in renderer) {
+      renderer.outputEncoding=THREE.sRGBEncoding;
     }
 
-    // 메인 3D 무대 관리
-    let mainScene = null, mainCamera = null, mainRenderer = null, activeMesh = null;
-    let animFrameId = null;
-    let targetRotY = 0, targetRotX = 0;
-    let isDragging = false, prevMouseX = 0;
-    let isThinkingAnim = false;
+    container.innerHTML="";
+    container.appendChild(renderer.domElement);
 
-    function initMain3DStage(charKey) {
-      if (animFrameId) cancelAnimationFrame(animFrameId);
-      const container = document.getElementById("threeCanvasContainer");
-      container.innerHTML = "";
+    scene.add(new THREE.AmbientLight(0xffffff,.85));
 
-      const width = container.clientWidth || 450;
-      const height = container.clientHeight || 225;
+    const key=new THREE.DirectionalLight(0xfff5e8,.9);
+    key.position.set(3,5,5);
 
-      mainScene = new THREE.Scene();
-      mainCamera = new THREE.PerspectiveCamera(35, width / height, 0.1, 100);
-      mainCamera.position.set(0, -0.26, 4.65);
+    const fill=new THREE.DirectionalLight(0xdbeafe,.5);
+    fill.position.set(-4,2,4);
 
-      mainRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-      mainRenderer.setSize(width, height);
-      mainRenderer.setPixelRatio(window.devicePixelRatio);
-      container.appendChild(mainRenderer.domElement);
+    scene.add(key,fill);
 
-      mainScene.add(new THREE.AmbientLight(0xffffff, 0.82));
-      const keyLight = new THREE.DirectionalLight(0xfffaf0, 0.58);
-      keyLight.position.set(4, 6, 6);
-      const fillLight = new THREE.DirectionalLight(0xf0f9ff, 0.34);
-      fillLight.position.set(-4, 2, 4);
-      const rimLight = new THREE.DirectionalLight(0xffffff, 0.22);
-      rimLight.position.set(0, 4, -5);
-      mainScene.add(keyLight, fillLight, rimLight);
+    const mesh=build3DCharacterMesh(type);
+    mesh.scale.set(.88,.88,.88);
+    scene.add(mesh);
 
-      activeMesh = build3DCharacterMesh(charKey);
-      mainScene.add(activeMesh);
+    previewRenderers.push({renderer,scene,camera,mesh});
 
-      const wrapper = document.getElementById("stageWrapper");
-      wrapper.onmousedown = e => { isDragging = true; prevMouseX = e.clientX; };
-      window.onmouseup = () => { isDragging = false; };
-      wrapper.onmousemove = e => {
-        if (isDragging) {
-          targetRotY += (e.clientX - prevMouseX) * 0.015;
-          prevMouseX = e.clientX;
-        } else {
-          const rect = wrapper.getBoundingClientRect();
-          const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-          const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-          targetRotY = nx * 0.45;
-          targetRotX = ny * 0.16;
-        }
-      };
+  });
 
-      wrapper.ontouchstart = e => { isDragging = true; prevMouseX = e.touches[0].clientX; };
-      wrapper.ontouchend = () => { isDragging = false; };
-      wrapper.ontouchmove = e => {
-        if (isDragging && e.touches[0]) {
-          targetRotY += (e.touches[0].clientX - prevMouseX) * 0.018;
-          prevMouseX = e.touches[0].clientX;
-        }
-      };
+  animatePreviews();
+}
 
-      function animateMain() {
-        animFrameId = requestAnimationFrame(animateMain);
-        if (!activeMesh || !mainRenderer) return;
+function animatePreviews() {
 
-        const t = Date.now() * 0.003;
-        activeMesh.rotation.y += (targetRotY - activeMesh.rotation.y) * 0.09;
-        if (activeMesh.userData.head) {
-          activeMesh.userData.head.rotation.x += (targetRotX - activeMesh.userData.head.rotation.x) * 0.09;
-        }
+  requestAnimationFrame(animatePreviews);
 
-        if (isThinkingAnim) {
-          activeMesh.position.y = Math.abs(Math.sin(t * 2.5)) * 0.14;
-          if (activeMesh.userData.head) {
-            activeMesh.userData.head.rotation.z = Math.sin(t * 2.5) * 0.1;
-          }
-        } else {
-          activeMesh.position.y = Math.sin(t) * 0.045;
-          if (activeMesh.userData.head) {
-            activeMesh.userData.head.rotation.z *= 0.9;
-          }
-        }
+  const t=Date.now()*.001;
 
-        mainRenderer.render(mainScene, mainCamera);
+  previewRenderers.forEach(item=>{
+
+    item.mesh.rotation.y=Math.sin(t*1.1)*.13;
+    item.mesh.position.y=Math.sin(t*1.6)*.035;
+
+    item.renderer.render(item.scene,item.camera);
+
+  });
+}
+
+
+/* ==========================================
+   메인 3D 무대
+========================================== */
+
+let mainScene=null;
+let mainCamera=null;
+let mainRenderer=null;
+let activeMesh=null;
+let animFrameId=null;
+
+let targetRotY=0;
+let targetRotX=0;
+let isDragging=false;
+let prevMouseX=0;
+let isThinkingAnim=false;
+
+function initMain3DStage(charKey) {
+
+  if(animFrameId) cancelAnimationFrame(animFrameId);
+
+  const container=document.getElementById("threeCanvasContainer");
+  container.innerHTML="";
+
+  const width=container.clientWidth||450;
+  const height=container.clientHeight||245;
+
+  mainScene=new THREE.Scene();
+
+  mainCamera=new THREE.PerspectiveCamera(
+    35,
+    width/height,
+    .1,
+    100
+  );
+
+  mainCamera.position.set(0,-.25,5.15);
+
+  mainRenderer=new THREE.WebGLRenderer({
+    alpha:true,
+    antialias:true
+  });
+
+  mainRenderer.setSize(width,height);
+  mainRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+
+  if("outputEncoding" in mainRenderer) {
+    mainRenderer.outputEncoding=THREE.sRGBEncoding;
+  }
+
+  container.appendChild(mainRenderer.domElement);
+
+  mainScene.add(new THREE.AmbientLight(0xffffff,.85));
+
+  const keyLight=new THREE.DirectionalLight(0xfff5e8,.95);
+  keyLight.position.set(4,6,6);
+
+  const fillLight=new THREE.DirectionalLight(0xdbeafe,.55);
+  fillLight.position.set(-4,2,4);
+
+  const rimLight=new THREE.DirectionalLight(0xffffff,.35);
+  rimLight.position.set(0,4,-5);
+
+  mainScene.add(keyLight,fillLight,rimLight);
+
+  activeMesh=build3DCharacterMesh(charKey);
+  activeMesh.scale.set(1.08,1.08,1.08);
+
+  mainScene.add(activeMesh);
+
+  const wrapper=document.getElementById("stageWrapper");
+
+  wrapper.onmousedown=e=>{
+    isDragging=true;
+    prevMouseX=e.clientX;
+  };
+
+  window.onmouseup=()=>{
+    isDragging=false;
+  };
+
+  wrapper.onmousemove=e=>{
+
+    if(isDragging) {
+      targetRotY+=(e.clientX-prevMouseX)*.012;
+      prevMouseX=e.clientX;
+    } else {
+      const rect=wrapper.getBoundingClientRect();
+      const nx=((e.clientX-rect.left)/rect.width)*2-1;
+      const ny=((e.clientY-rect.top)/rect.height)*2-1;
+
+      targetRotY=nx*.32;
+      targetRotX=ny*.1;
+    }
+  };
+
+  wrapper.ontouchstart=e=>{
+    if(!e.touches[0]) return;
+    isDragging=true;
+    prevMouseX=e.touches[0].clientX;
+  };
+
+  wrapper.ontouchend=()=>{
+    isDragging=false;
+  };
+
+  wrapper.ontouchmove=e=>{
+    if(isDragging&&e.touches[0]) {
+      targetRotY+=(e.touches[0].clientX-prevMouseX)*.014;
+      prevMouseX=e.touches[0].clientX;
+    }
+  };
+
+  function animateMain() {
+
+    animFrameId=requestAnimationFrame(animateMain);
+
+    if(!activeMesh||!mainRenderer) return;
+
+    const t=Date.now()*.0025;
+
+    activeMesh.rotation.y+=(targetRotY-activeMesh.rotation.y)*.08;
+
+    if(activeMesh.userData.head) {
+      activeMesh.userData.head.rotation.x+=(targetRotX-activeMesh.userData.head.rotation.x)*.08;
+    }
+
+    if(isThinkingAnim) {
+      activeMesh.position.y=Math.abs(Math.sin(t*2.5))*.1;
+
+      if(activeMesh.userData.head) {
+        activeMesh.userData.head.rotation.z=Math.sin(t*2.5)*.045;
       }
-      animateMain();
-    }
 
-    window.onload = () => {
-      renderCardPreviews();
-    };
+    } else {
 
-    // ================= 대화 저장(localStorage) & 문맥 인식 엔진 =================
-    let currentCharKey = null;
-    let currentChar = null;
-    let isTyping = false;
-    let chatHistory = [];
-    let lastTopic = null;
+      activeMesh.position.y=Math.sin(t)*.035;
 
-    function getStorageKey(charKey) {
-      return `maumon_chat_${charKey}`;
-    }
-
-    function saveChatHistory() {
-      if (!currentCharKey) return;
-      localStorage.setItem(getStorageKey(currentCharKey), JSON.stringify({
-        messages: chatHistory,
-        lastTopic: lastTopic
-      }));
-    }
-
-    function loadChatHistory(charKey) {
-      const saved = localStorage.getItem(getStorageKey(charKey));
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {
-          return { messages: [], lastTopic: null };
-        }
+      if(activeMesh.userData.head) {
+        activeMesh.userData.head.rotation.z*=.92;
       }
-      return { messages: [], lastTopic: null };
     }
 
-    function clearChatHistory() {
-      if (isTyping || !currentCharKey) return;
-      if (!confirm(`${currentChar.name}와의 대화 기록을 모두 지울까요?`)) return;
+    mainRenderer.render(mainScene,mainCamera);
+  }
 
-      localStorage.removeItem(getStorageKey(currentCharKey));
-      chatHistory = [];
-      lastTopic = null;
+  animateMain();
+}
 
-      const chatBox = document.getElementById("chatBox");
-      chatBox.innerHTML = "";
-      showTypingAndReply(currentChar.greeting, "기본 인사 · Level 1", false);
+
+/* ==========================================
+   대화 기능
+========================================== */
+
+let currentCharKey=null;
+let currentChar=null;
+let isTyping=false;
+let chatHistory=[];
+let lastTopic=null;
+
+function getStorageKey(charKey) {
+  return `maumon_chat_${charKey}`;
+}
+
+function saveChatHistory() {
+
+  if(!currentCharKey) return;
+
+  try {
+    localStorage.setItem(
+      getStorageKey(currentCharKey),
+      JSON.stringify({
+        messages:chatHistory,
+        lastTopic:lastTopic
+      })
+    );
+  } catch(e) {
+    console.warn("대화 기록 저장 실패:",e);
+  }
+}
+
+function loadChatHistory(charKey) {
+
+  try {
+
+    const saved=localStorage.getItem(getStorageKey(charKey));
+
+    if(saved) {
+      const data=JSON.parse(saved);
+
+      return {
+        messages:Array.isArray(data.messages)?data.messages:[],
+        lastTopic:data.lastTopic||null
+      };
     }
 
-    function selectCharacter(charKey) {
-      currentCharKey = charKey;
-      currentChar = characters[charKey];
-      targetRotY = 0;
-      targetRotX = 0;
+  } catch(e) {
+    console.warn("대화 기록 불러오기 실패:",e);
+  }
 
-      document.getElementById("selectScreen").style.display = "none";
-      document.getElementById("chatScreen").style.display = "flex";
+  return {messages:[],lastTopic:null};
+}
 
-      document.getElementById("topBar").style.background = currentChar.themeColor;
-      document.getElementById("sendBtn").style.background = currentChar.themeColor;
-      document.getElementById("headerName").innerText = currentChar.name;
-      document.getElementById("headerRole").innerText = currentChar.role;
-      document.getElementById("stageWrapper").style.background = currentChar.stageBg;
+function clearChatHistory() {
 
-      setTimeout(() => initMain3DStage(charKey), 30);
+  if(isTyping||!currentCharKey) return;
 
-      const savedData = loadChatHistory(charKey);
-      chatHistory = savedData.messages || [];
-      lastTopic = savedData.lastTopic || null;
+  if(!confirm(`${currentChar.name}와의 대화 기록을 모두 지울까요?`)) return;
 
-      const chatBox = document.getElementById("chatBox");
-      chatBox.innerHTML = "";
+  localStorage.removeItem(getStorageKey(currentCharKey));
 
-      if (chatHistory.length > 0) {
-        chatHistory.forEach(msg => {
-          if (msg.sender === "user") {
-            renderUserBubble(msg.text);
-          } else {
-            renderBotBubble(msg.text, msg.tag, msg.isDanger);
-          }
-        });
+  chatHistory=[];
+  lastTopic=null;
+
+  document.getElementById("chatBox").innerHTML="";
+
+  showTypingAndReply(
+    currentChar.greeting,
+    "기본 인사 · Level 1",
+    false
+  );
+}
+
+function selectCharacter(charKey) {
+
+  currentCharKey=charKey;
+  currentChar=characters[charKey];
+
+  targetRotY=0;
+  targetRotX=0;
+
+  document.getElementById("selectScreen").style.display="none";
+  document.getElementById("chatScreen").style.display="flex";
+
+  document.getElementById("topBar").style.background=currentChar.themeColor;
+  document.getElementById("sendBtn").style.background=currentChar.themeColor;
+
+  document.getElementById("headerName").innerText=currentChar.name;
+  document.getElementById("headerRole").innerText=currentChar.role;
+
+  document.getElementById("stageWrapper").style.background=currentChar.stageBg;
+
+  setTimeout(()=>initMain3DStage(charKey),30);
+
+  const savedData=loadChatHistory(charKey);
+
+  chatHistory=savedData.messages;
+  lastTopic=savedData.lastTopic;
+
+  const chatBox=document.getElementById("chatBox");
+  chatBox.innerHTML="";
+
+  if(chatHistory.length>0) {
+
+    chatHistory.forEach(msg=>{
+
+      if(msg.sender==="user") {
+        renderUserBubble(msg.text);
       } else {
-        showTypingAndReply(currentChar.greeting, "기본 인사 · Level 1", false);
-      }
-    }
-
-    function goBack() {
-      if (isTyping) return;
-      if (animFrameId) cancelAnimationFrame(animFrameId);
-      activeMesh = null;
-      document.getElementById("chatScreen").style.display = "none";
-      document.getElementById("selectScreen").style.display = "flex";
-    }
-
-    function sendMessage() {
-      if (isTyping) return;
-      const input = document.getElementById("userInput");
-      const text = input.value.trim();
-      if (!text) return;
-
-      appendUserMessage(text);
-      input.value = "";
-
-      const result = getSmartResponse(text);
-      showTypingAndReply(result.reply, result.tag, result.isDanger);
-    }
-
-    function getSmartResponse(text) {
-      const clean = text.replace(/[!?.,~ㅋㅎㅠㅜ\s]/g, "");
-
-      // 1. Level 3: 긴급 위기 키워드 감지 (최우선)
-      const dangerWords = ["죽고", "사라지고", "자해", "끝내고", "살기싫", "자살"];
-      if (dangerWords.some(w => clean.includes(w))) {
-        return {
-          tag: "긴급 위기 대응 매뉴얼 · Level 3",
-          isDanger: true,
-          reply: "잠깐만, 네가 지금 얼마나 힘들고 버거운지 느껴져서 정말 걱정이 돼. 이 힘든 마음을 절대 혼자서 감당하지 않았으면 좋겠어.<br><br>지금 바로 네 이야기를 들어줄 수 있는 전문 선생님께 연결해 줄게. 꼭 연락해 줘.<br>📞 <b>청소년 상담전화: 국번없이 1388 (24시간 무료)</b><br>📞 <b>자살예방 상담전화: 109</b>"
-        };
+        renderBotBubble(msg.text,msg.tag,msg.isDanger);
       }
 
-      // 2. 가벼운 인사 문맥 처리
-      const exactGreetings = ["안녕", "안녕하세요", "하이", "헬로", "반가워", "안뇽", "야", "저기", "있잖아"];
-      if (exactGreetings.includes(clean) || clean.startsWith("안녕")) {
-        return { tag: "일상 인사 · Level 1", isDanger: false, reply: currentChar.smallTalk.hi };
-      }
+    });
 
-      // 3. 안부 묻기
-      if (["잘지냈", "뭐해", "뭐하고", "어떻게지내", "기분어때"].some(w => clean.includes(w))) {
-        return { tag: "일상 안부 · Level 1", isDanger: false, reply: currentChar.smallTalk.howAreYou };
-      }
+  } else {
 
-      // 4. 심심함/일상 수다 문맥 처리
-      if (["심심", "놀자", "그냥", "심심해"].some(w => clean.includes(w))) {
-        return { tag: "일상 대화 · Level 1", isDanger: false, reply: currentChar.smallTalk.bored };
-      }
+    showTypingAndReply(
+      currentChar.greeting,
+      "기본 인사 · Level 1",
+      false
+    );
 
-      // 5. 감사 인사 문맥 처리
-      if (["고마워", "감사", "땡큐", "고맙"].some(w => clean.includes(w))) {
-        return { tag: "일상 대화 · Level 1", isDanger: false, reply: currentChar.smallTalk.thanks };
-      }
+  }
+}
 
-      // 6. RAG 전문 상담 매뉴얼 검색
-      if (["시험", "성적", "공부", "진로", "대학", "불안", "모의고사", "숙제", "학원", "점수"].some(w => text.includes(w))) {
-        lastTopic = "study";
-        return { tag: "학업·진로 매뉴얼 · Level 1", isDanger: false, reply: currentChar.manual.study };
-      }
+function goBack() {
 
-      if (["친구", "따돌림", "단톡", "싸웠", "외톨이", "관계", "손절", "애들", "반에서", "왕따"].some(w => text.includes(w))) {
-        lastTopic = "friend";
-        return { tag: "대인관계 매뉴얼 · Level 2", isDanger: false, reply: currentChar.manual.friend };
-      }
+  if(isTyping) return;
 
-      if (["부모님", "엄마", "아빠", "집", "가족", "잔소리", "동생", "언니", "오빠", "형"].some(w => text.includes(w))) {
-        lastTopic = "family";
-        return { tag: "가족 갈등 매뉴얼 · Level 2", isDanger: false, reply: currentChar.manual.family };
-      }
+  if(animFrameId) {
+    cancelAnimationFrame(animFrameId);
+    animFrameId=null;
+  }
 
-      if (["피곤", "졸려", "잠", "지쳐", "힘들", "우울", "스트레스", "짜증"].some(w => text.includes(w))) {
-        lastTopic = "tired";
-        return { tag: "정서 안정 매뉴얼 · Level 2", isDanger: false, reply: currentChar.manual.tired };
-      }
+  activeMesh=null;
+  mainRenderer=null;
 
-      // 7. 직전 주제 후속 반응 연결
-      if (lastTopic && (["어떻게", "모르겠", "막막", "맞아", "그래", "응", "어"].some(w => clean.includes(w)) || clean.length <= 4)) {
-        const topicReply = currentChar.followUp[lastTopic];
-        lastTopic = null;
-        return { tag: "맥락 심화 상담 · Level 2", isDanger: false, reply: topicReply };
-      }
+  document.getElementById("chatScreen").style.display="none";
+  document.getElementById("selectScreen").style.display="flex";
+}
 
-      // 8. 긍정/부정 짧은 대답 처리
-      if (["응", "어", "맞아", "그래", "네", "예"].includes(clean)) {
-        return { tag: "대화 이어가기 · Level 1", isDanger: false, reply: currentChar.smallTalk.yes };
-      }
-      if (["아니", "아뇨", "별로", "몰라", "글쎄"].includes(clean)) {
-        return { tag: "대화 이어가기 · Level 1", isDanger: false, reply: currentChar.smallTalk.no };
-      }
-      if (clean.length <= 2) {
-        return { tag: "대화 이어가기 · Level 1", isDanger: false, reply: currentChar.smallTalk.short };
-      }
+function sendMessage() {
 
-      // 9. 일반 서술 문장일 때 자연스럽게 질문 유도
-      const randomFallback = currentChar.fallback[Math.floor(Math.random() * currentChar.fallback.length)];
-      return { tag: "정서 공감 매뉴얼 · Level 1", isDanger: false, reply: randomFallback };
-    }
+  if(isTyping) return;
 
-    function renderUserBubble(text) {
-      const chatBox = document.getElementById("chatBox");
-      const row = document.createElement("div");
-      row.className = "msg-row user-row";
-      row.innerHTML = `<div class="bubble user-bubble" style="background:${currentChar.themeColor}">${escapeHtml(text)}</div>`;
-      chatBox.appendChild(row);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
+  const input=document.getElementById("userInput");
+  const text=input.value.trim();
 
-    function renderBotBubble(replyHtml, tagText, isDanger) {
-      const chatBox = document.getElementById("chatBox");
-      const botRow = document.createElement("div");
-      botRow.className = "msg-row bot-row";
-      const bubbleClass = isDanger ? "bubble bot-bubble danger-bubble" : "bubble bot-bubble";
-      botRow.innerHTML = `
-        <span class="sender-label">${currentChar.name}</span>
-        <div class="${bubbleClass}">
-          <span class="tag">${tagText}</span><br>${replyHtml}
-        </div>
-      `;
-      chatBox.appendChild(botRow);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
+  if(!text) return;
 
-    function appendUserMessage(text) {
-      renderUserBubble(text);
-      chatHistory.push({ sender: "user", text: text });
-      saveChatHistory();
-    }
+  appendUserMessage(text);
+  input.value="";
 
-    function showTypingAndReply(replyHtml, tagText, isDanger) {
-      isTyping = true;
-      isThinkingAnim = true;
-      document.getElementById("sendBtn").disabled = true;
+  const result=getSmartResponse(text);
 
-      const statusPill = document.getElementById("statusPill");
-      statusPill.innerText = `✍️ ${currentChar.name}가 답장 적는 중...`;
-      statusPill.style.color = currentChar.themeColor;
+  showTypingAndReply(
+    result.reply,
+    result.tag,
+    result.isDanger
+  );
+}
 
-      const chatBox = document.getElementById("chatBox");
-      const typingRow = document.createElement("div");
-      typingRow.className = "msg-row bot-row";
-      typingRow.id = "typingIndicator";
-      typingRow.innerHTML = `
-        <span class="sender-label">${currentChar.name}</span>
-        <div class="bubble bot-bubble typing-dots">
-          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-        </div>
-      `;
-      chatBox.appendChild(typingRow);
-      chatBox.scrollTop = chatBox.scrollHeight;
 
-      const delay = Math.min(1800, Math.max(900, replyHtml.length * 12));
+/* ==========================================
+   문맥 인식 응답 엔진
+========================================== */
 
-      setTimeout(() => {
-        const indicator = document.getElementById("typingIndicator");
-        if (indicator) indicator.remove();
+function getSmartResponse(text) {
 
-        isThinkingAnim = false;
-        statusPill.innerText = "● 이야기 듣는 중";
-        statusPill.style.color = "#334155";
+  const clean=text.replace(/[!?.,~ㅋㅎㅠㅜ\s]/g,"");
 
-        renderBotBubble(replyHtml, tagText, isDanger);
+  // 긴급한 도움이 필요한 상황 감지
+  const dangerWords=[
+    "죽고","사라지고","자해","끝내고",
+    "살기싫","자살","죽고싶","죽을래"
+  ];
 
-        chatHistory.push({
-          sender: "bot",
-          text: replyHtml,
-          tag: tagText,
-          isDanger: isDanger
-        });
-        saveChatHistory();
+  if(dangerWords.some(w=>clean.includes(w))) {
 
-        isTyping = false;
-        document.getElementById("sendBtn").disabled = false;
-        document.getElementById("userInput").focus();
-      }, delay);
-    }
+    return {
+      tag:"긴급 도움 안내 · Level 3",
+      isDanger:true,
+      reply:"지금 마음이 많이 힘든 것 같아 걱정돼. 이 이야기를 혼자 감당하지 않았으면 좋겠어. 지금 곁에 있는 믿을 수 있는 어른이나 보호자에게 바로 알려줘. 청소년 상담전화 1388에서도 도움을 받을 수 있어. 당장 안전이 걱정된다면 112 또는 119에 연락해 줘."
+    };
+  }
 
-    function escapeHtml(text) {
-      const div = document.createElement("div");
-      div.innerText = text;
-      return div.innerHTML;
-    }
-  </script>
+  const exactGreetings=[
+    "안녕","안녕하세요","하이","헬로",
+    "반가워","안뇽","야","저기","있잖아"
+  ];
+
+  if(exactGreetings.includes(clean)||clean.startsWith("안녕")) {
+    return {
+      tag:"일상 인사 · Level 1",
+      isDanger:false,
+      reply:currentChar.smallTalk.hi
+    };
+  }
+
+  if(["잘지냈","뭐해","뭐하고","어떻게지내","기분어때"].some(w=>clean.includes(w))) {
+    return {
+      tag:"일상 안부 · Level 1",
+      isDanger:false,
+      reply:currentChar.smallTalk.howAreYou
+    };
+  }
+
+  if(["심심","놀자","그냥"].some(w=>clean.includes(w))) {
+    return {
+      tag:"일상 대화 · Level 1",
+      isDanger:false,
+      reply:currentChar.smallTalk.bored
+    };
+  }
+
+  if(["고마워","감사","땡큐","고맙"].some(w=>clean.includes(w))) {
+    return {
+      tag:"일상 대화 · Level 1",
+      isDanger:false,
+      reply:currentChar.smallTalk.thanks
+    };
+  }
+
+  if(["시험","성적","공부","진로","대학","불안","모의고사","숙제","학원","점수"].some(w=>text.includes(w))) {
+
+    lastTopic="study";
+
+    return {
+      tag:"학업·진로 매뉴얼 · Level 1",
+      isDanger:false,
+      reply:currentChar.manual.study
+    };
+  }
+
+  if(["친구","따돌림","단톡","싸웠","외톨이","관계","손절","애들","반에서","왕따"].some(w=>text.includes(w))) {
+
+    lastTopic="friend";
+
+    return {
+      tag:"대인관계 매뉴얼 · Level 2",
+      isDanger:false,
+      reply:currentChar.manual.friend
+    };
+  }
+
+  if(["부모님","엄마","아빠","집","가족","잔소리","동생","언니","오빠","형"].some(w=>text.includes(w))) {
+
+    lastTopic="family";
+
+    return {
+      tag:"가족 갈등 매뉴얼 · Level 2",
+      isDanger:false,
+      reply:currentChar.manual.family
+    };
+  }
+
+  if(["피곤","졸려","잠","지쳐","힘들","우울","스트레스","짜증"].some(w=>text.includes(w))) {
+
+    lastTopic="tired";
+
+    return {
+      tag:"정서 안정 매뉴얼 · Level 2",
+      isDanger:false,
+      reply:currentChar.manual.tired
+    };
+  }
+
+  if(lastTopic&&(
+    ["어떻게","모르겠","막막","맞아","그래","응","어"].some(w=>clean.includes(w))
+    ||clean.length<=4
+  )) {
+
+    const topicReply=currentChar.followUp[lastTopic];
+    lastTopic=null;
+
+    return {
+      tag:"맥락 심화 상담 · Level 2",
+      isDanger:false,
+      reply:topicReply
+    };
+  }
+
+  if(["응","어","맞아","그래","네","예"].includes(clean)) {
+    return {
+      tag:"대화 이어가기 · Level 1",
+      isDanger:false,
+      reply:currentChar.smallTalk.yes
+    };
+  }
+
+  if(["아니","아뇨","별로","몰라","글쎄"].includes(clean)) {
+    return {
+      tag:"대화 이어가기 · Level 1",
+      isDanger:false,
+      reply:currentChar.smallTalk.no
+    };
+  }
+
+  if(clean.length<=2) {
+    return {
+      tag:"대화 이어가기 · Level 1",
+      isDanger:false,
+      reply:currentChar.smallTalk.short
+    };
+  }
+
+  const randomFallback=
+    currentChar.fallback[
+      Math.floor(Math.random()*currentChar.fallback.length)
+    ];
+
+  return {
+    tag:"정서 공감 매뉴얼 · Level 1",
+    isDanger:false,
+    reply:randomFallback
+  };
+}
+
+
+/* ==========================================
+   말풍선 출력
+========================================== */
+
+function renderUserBubble(text) {
+
+  const chatBox=document.getElementById("chatBox");
+
+  const row=document.createElement("div");
+  row.className="msg-row user-row";
+
+  const bubble=document.createElement("div");
+  bubble.className="bubble user-bubble";
+  bubble.style.background=currentChar.themeColor;
+  bubble.textContent=text;
+
+  row.appendChild(bubble);
+  chatBox.appendChild(row);
+
+  chatBox.scrollTop=chatBox.scrollHeight;
+}
+
+function renderBotBubble(replyHtml,tagText,isDanger) {
+
+  const chatBox=document.getElementById("chatBox");
+
+  const botRow=document.createElement("div");
+  botRow.className="msg-row bot-row";
+
+  const sender=document.createElement("span");
+  sender.className="sender-label";
+  sender.textContent=currentChar.name;
+
+  const bubble=document.createElement("div");
+
+  bubble.className=isDanger
+    ?"bubble bot-bubble danger-bubble"
+    :"bubble bot-bubble";
+
+  const tag=document.createElement("span");
+  tag.className="tag";
+  tag.textContent=tagText;
+
+  const content=document.createElement("div");
+  content.textContent=replyHtml;
+
+  bubble.appendChild(tag);
+  bubble.appendChild(document.createElement("br"));
+  bubble.appendChild(content);
+
+  botRow.appendChild(sender);
+  botRow.appendChild(bubble);
+
+  chatBox.appendChild(botRow);
+  chatBox.scrollTop=chatBox.scrollHeight;
+}
+
+function appendUserMessage(text) {
+
+  renderUserBubble(text);
+
+  chatHistory.push({
+    sender:"user",
+    text:text
+  });
+
+  saveChatHistory();
+}
+
+
+/* ==========================================
+   답장 대기 애니메이션
+========================================== */
+
+function showTypingAndReply(replyHtml,tagText,isDanger) {
+
+  isTyping=true;
+  isThinkingAnim=true;
+
+  document.getElementById("sendBtn").disabled=true;
+
+  const statusPill=document.getElementById("statusPill");
+
+  statusPill.innerText=`✍️ ${currentChar.name}가 답장 적는 중...`;
+  statusPill.style.color=currentChar.themeColor;
+
+  const chatBox=document.getElementById("chatBox");
+
+  const typingRow=document.createElement("div");
+  typingRow.className="msg-row bot-row";
+  typingRow.id="typingIndicator";
+
+  const sender=document.createElement("span");
+  sender.className="sender-label";
+  sender.textContent=currentChar.name;
+
+  const typingBubble=document.createElement("div");
+  typingBubble.className="bubble bot-bubble typing-dots";
+
+  for(let i=0;i<3;i++) {
+    const dot=document.createElement("div");
+    dot.className="dot";
+    typingBubble.appendChild(dot);
+  }
+
+  typingRow.appendChild(sender);
+  typingRow.appendChild(typingBubble);
+
+  chatBox.appendChild(typingRow);
+  chatBox.scrollTop=chatBox.scrollHeight;
+
+  const delay=Math.min(
+    1800,
+    Math.max(900,replyHtml.length*12)
+  );
+
+  setTimeout(()=>{
+
+    const indicator=document.getElementById("typingIndicator");
+
+    if(indicator) indicator.remove();
+
+    isThinkingAnim=false;
+
+    statusPill.innerText="● 이야기 듣는 중";
+    statusPill.style.color="#334155";
+
+    renderBotBubble(replyHtml,tagText,isDanger);
+
+    chatHistory.push({
+      sender:"bot",
+      text:replyHtml,
+      tag:tagText,
+      isDanger:isDanger
+    });
+
+    saveChatHistory();
+
+    isTyping=false;
+
+    document.getElementById("sendBtn").disabled=false;
+    document.getElementById("userInput").focus();
+
+  },delay);
+}
+
+
+/* ==========================================
+   화면 크기 변경 대응
+========================================== */
+
+window.addEventListener("resize",()=>{
+
+  if(!mainRenderer||!mainCamera) return;
+
+  const container=document.getElementById("threeCanvasContainer");
+
+  const width=container.clientWidth;
+  const height=container.clientHeight;
+
+  if(!width||!height) return;
+
+  mainCamera.aspect=width/height;
+  mainCamera.updateProjectionMatrix();
+
+  mainRenderer.setSize(width,height);
+});
+
+
+/* ==========================================
+   시작
+========================================== */
+
+window.onload=()=>{
+  if(typeof THREE==="undefined") {
+    alert("3D 캐릭터를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.");
+    return;
+  }
+
+  renderCardPreviews();
+};
+
+</script>
 </body>
 </html>
