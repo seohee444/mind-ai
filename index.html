@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>마음온(On) - 3D AI 심리 상담소</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <title>마음온(On) - AI 심리 상담소</title>
   <style>
     * { box-sizing: border-box; font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif; }
     body {
@@ -40,9 +39,14 @@
       transform: translateY(-4px); border-color: #818cf8;
       box-shadow: 0 12px 24px rgba(99, 102, 241, 0.15);
     }
-    .card-3d-preview {
-      width: 128px; height: 128px; border-radius: 22px;
-      margin-bottom: 10px; overflow: hidden; position: relative;
+    .card-avatar-box {
+      width: 124px; height: 124px; border-radius: 22px;
+      margin-bottom: 10px; overflow: hidden;
+      display: flex; justify-content: center; align-items: flex-end;
+    }
+    .card-avatar-box svg {
+      width: 116px; height: 116px;
+      animation: floatIdle 3.2s ease-in-out infinite;
     }
     .card-badge {
       font-size: 10.5px; font-weight: bold; padding: 3px 9px;
@@ -72,26 +76,48 @@
     }
     .change-btn:hover { background: rgba(255,255,255,0.4); }
 
-    /* 3D 캐릭터 무대 */
-    .stage-3d-wrapper {
-      height: 230px; width: 100%; position: relative;
+    /* 캐릭터 스테이지 */
+    .stage-wrapper {
+      height: 220px; width: 100%; position: relative;
       border-bottom: 1px solid #f1f5f9; overflow: hidden;
-      cursor: grab;
+      display: flex; justify-content: center; align-items: flex-end;
+      perspective: 700px;
     }
-    .stage-3d-wrapper:active { cursor: grabbing; }
-    #threeCanvasContainer { width: 100%; height: 100%; }
+    .character-actor {
+      width: 195px; height: 195px;
+      transition: transform 0.15s ease-out;
+      transform-style: preserve-3d;
+      animation: floatIdle 3.2s ease-in-out infinite;
+    }
+    .character-actor.thinking {
+      animation: bounceTalk 0.6s ease-in-out infinite;
+    }
+    .character-actor svg {
+      width: 100%; height: 100%;
+      filter: drop-shadow(0 12px 18px rgba(30, 41, 59, 0.14));
+    }
     .stage-hint {
       position: absolute; top: 10px; left: 14px;
       font-size: 10.5px; color: rgba(30, 41, 59, 0.65);
-      background: rgba(255,255,255,0.78); padding: 3px 9px; border-radius: 10px;
+      background: rgba(255,255,255,0.82); padding: 3px 9px; border-radius: 10px;
       pointer-events: none;
     }
     .status-pill {
       position: absolute; bottom: 10px; right: 14px;
-      background: rgba(255,255,255,0.94); color: #334155;
+      background: rgba(255,255,255,0.95); color: #334155;
       font-size: 11px; padding: 4px 11px; border-radius: 14px;
       box-shadow: 0 3px 10px rgba(0,0,0,0.08); font-weight: bold;
       pointer-events: none;
+    }
+
+    @keyframes floatIdle {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-6px); }
+    }
+    @keyframes bounceTalk {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      25% { transform: translateY(-8px) rotate(-2deg); }
+      75% { transform: translateY(-8px) rotate(2deg); }
     }
 
     /* 대화창 */
@@ -151,28 +177,28 @@
 
       <div class="char-grid">
         <div class="char-card" onclick="selectCharacter('haru')">
-          <div class="card-3d-preview" style="background:radial-gradient(circle at 50% 30%, #f0f9ff, #bae6fd);" id="preview-haru"></div>
+          <div class="card-avatar-box" style="background:radial-gradient(circle at 50% 30%, #f0f9ff, #bae6fd);" id="preview-haru"></div>
           <span class="card-badge" style="background:#bae6fd; color:#0369a1;">동갑내기 단짝 친구</span>
           <h3>하루</h3>
           <p>"무조건 네 편이야! 편하게 반말로 다 털어놔."</p>
         </div>
 
         <div class="char-card" onclick="selectCharacter('teacher')">
-          <div class="card-3d-preview" style="background:radial-gradient(circle at 50% 30%, #f0fdf4, #bbf7d0);" id="preview-teacher"></div>
+          <div class="card-avatar-box" style="background:radial-gradient(circle at 50% 30%, #f0fdf4, #bbf7d0);" id="preview-teacher"></div>
           <span class="card-badge" style="background:#bbf7d0; color:#15803d;">다정한 상담 선생님</span>
           <h3>선생님</h3>
           <p>"혼자 고민하지 마세요. 선생님이 차분히 들어줄게요."</p>
         </div>
 
         <div class="char-card" onclick="selectCharacter('bambi')">
-          <div class="card-3d-preview" style="background:radial-gradient(circle at 50% 30%, #fff7ed, #fed7aa);" id="preview-bambi"></div>
+          <div class="card-avatar-box" style="background:radial-gradient(circle at 50% 30%, #fff7ed, #fed7aa);" id="preview-bambi"></div>
           <span class="card-badge" style="background:#fed7aa; color:#c2410c;">말랑한 아기 강아지</span>
           <h3>밤비</h3>
           <p>"꼬리 흔들며 기다렸어! 오늘 무슨 일 있었어?"</p>
         </div>
 
         <div class="char-card" onclick="selectCharacter('luna')">
-          <div class="card-3d-preview" style="background:radial-gradient(circle at 50% 30%, #faf5ff, #e9d5ff);" id="preview-luna"></div>
+          <div class="card-avatar-box" style="background:radial-gradient(circle at 50% 30%, #faf5ff, #e9d5ff);" id="preview-luna"></div>
           <span class="card-badge" style="background:#e9d5ff; color:#7e22ce;">차분한 달빛 고양이</span>
           <h3>루나</h3>
           <p>"복잡한 머릿속을 차분하게 정리해 줄게냥."</p>
@@ -193,9 +219,9 @@
         </div>
       </div>
 
-      <div class="stage-3d-wrapper" id="stageWrapper">
-        <div class="stage-hint">↔ 좌우로 움직이면 입체로 반응해요</div>
-        <div id="threeCanvasContainer"></div>
+      <div class="stage-wrapper" id="stageWrapper">
+        <div class="stage-hint">✨ 마우스를 움직이면 시선이 따라가요</div>
+        <div class="character-actor" id="characterActor"></div>
         <div class="status-pill" id="statusPill">● 이야기 듣는 중</div>
       </div>
 
@@ -209,6 +235,285 @@
   </div>
 
   <script>
+    // ================= 고해상도 3D 클레이 일러스트 SVG 아트 =================
+    const characterSVGs = {
+      teacher: `
+        <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="skinT" cx="42%" cy="35%" r="60%">
+              <stop offset="0%" stop-color="#FFF0E3"/>
+              <stop offset="70%" stop-color="#FFD8B8"/>
+              <stop offset="100%" stop-color="#E8B894"/>
+            </radialGradient>
+            <radialGradient id="beretGrad" cx="35%" cy="25%" r="70%">
+              <stop offset="0%" stop-color="#543D32"/>
+              <stop offset="65%" stop-color="#36241C"/>
+              <stop offset="100%" stop-color="#1E130E"/>
+            </radialGradient>
+            <radialGradient id="hairT" cx="40%" cy="30%" r="70%">
+              <stop offset="0%" stop-color="#9C745B"/>
+              <stop offset="100%" stop-color="#694A38"/>
+            </radialGradient>
+            <linearGradient id="vestT" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#2B4C9B"/>
+              <stop offset="100%" stop-color="#172A5E"/>
+            </linearGradient>
+            <linearGradient id="bookT" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#4ADE80"/>
+              <stop offset="100%" stop-color="#16A34A"/>
+            </linearGradient>
+          </defs>
+
+          <!-- 긴 웨이브 뒷머리 -->
+          <path d="M 155 110 C 195 115, 205 165, 185 195 C 175 210, 145 205, 140 185 Z" fill="url(#hairT)"/>
+          <circle cx="176" cy="175" r="24" fill="url(#hairT)"/>
+
+          <!-- 몸통 (흰 셔츠 + 네이비 베스트) -->
+          <rect x="74" y="158" width="92" height="82" rx="38" fill="#FFFFFF"/>
+          <path d="M 84 162 L 156 162 L 164 240 L 76 240 Z" fill="url(#vestT)"/>
+          <polygon points="106,162 120,180 134,162" fill="#FFFFFF"/>
+
+          <!-- 지휘봉 -->
+          <line x1="62" y1="188" x2="46" y2="95" stroke="#36241C" stroke-width="5.5" stroke-linecap="round"/>
+          <line x1="49" y1="115" x2="46" y2="95" stroke="#FFFFFF" stroke-width="5.5" stroke-linecap="round"/>
+
+          <!-- 왼팔 & 손 -->
+          <path d="M 82 172 Q 58 182 62 162" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round" fill="none"/>
+          <circle cx="62" cy="158" r="14" fill="url(#skinT)"/>
+
+          <!-- 양쪽 둥근 귀 -->
+          <ellipse cx="64" cy="108" rx="13" ry="17" fill="url(#skinT)"/>
+          <ellipse cx="66" cy="108" rx="7" ry="10" fill="#E8B490" opacity="0.5"/>
+          <ellipse cx="176" cy="108" rx="13" ry="17" fill="url(#skinT)"/>
+          <ellipse cx="174" cy="108" rx="7" ry="10" fill="#E8B490" opacity="0.5"/>
+
+          <!-- 얼굴형 -->
+          <rect x="66" y="48" width="108" height="106" rx="52" fill="url(#skinT)"/>
+
+          <!-- 구레나룻 -->
+          <path d="M 164 78 Q 174 88 168 102 Q 160 95 162 82 Z" fill="url(#hairT)"/>
+
+          <!-- 볼터치 -->
+          <ellipse cx="88" cy="116" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
+          <ellipse cx="152" cy="116" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
+
+          <!-- 눈썹 -->
+          <path d="M 94 84 Q 103 80 110 84" stroke="#4A3228" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <path d="M 130 84 Q 137 80 146 84" stroke="#4A3228" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+          <!-- 눈 (흰자 + 검은 눈동자) -->
+          <g class="eye-group">
+            <circle cx="104" cy="102" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="106" cy="100" r="6.8" fill="#1E1B18"/>
+            <circle cx="108" cy="98" r="2.2" fill="#FFFFFF"/>
+
+            <circle cx="136" cy="102" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="134" cy="100" r="6.8" fill="#1E1B18"/>
+            <circle cx="136" cy="98" r="2.2" fill="#FFFFFF"/>
+          </g>
+
+          <!-- 동그란 안경 -->
+          <circle cx="103" cy="104" r="15.5" stroke="#291D18" stroke-width="2.4" fill="none"/>
+          <circle cx="137" cy="104" r="15.5" stroke="#291D18" stroke-width="2.4" fill="none"/>
+          <path d="M 118.5 103 Q 120 101 121.5 103" stroke="#291D18" stroke-width="2.4" fill="none"/>
+
+          <!-- 도톰한 입술 -->
+          <ellipse cx="120" cy="126" rx="8.5" ry="4.5" fill="#D96B66"/>
+
+          <!-- 다크브라운 베레모 -->
+          <path d="M 54 68 C 52 34, 105 24, 148 34 C 182 42, 188 72, 174 84 C 150 68, 86 68, 54 68 Z" fill="url(#beretGrad)"/>
+          <rect x="116" y="21" width="8" height="10" rx="4" fill="#2A1B14" transform="rotate(8 120 26)"/>
+
+          <!-- 초록 다이어리 & 책갈피 & 오른손 -->
+          <g transform="rotate(-12 145 195)">
+            <rect x="118" y="166" width="46" height="58" rx="6" fill="#FFFFFF"/>
+            <rect x="123" y="166" width="44" height="58" rx="6" fill="url(#bookT)"/>
+            <polygon points="150,166 158,166 158,182 154,177 150,182" fill="#FACC15"/>
+          </g>
+          <circle cx="132" cy="198" r="15" fill="url(#skinT)"/>
+        </svg>
+      `,
+      haru: `
+        <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="skinH" cx="42%" cy="35%" r="60%">
+              <stop offset="0%" stop-color="#FFF2E6"/>
+              <stop offset="70%" stop-color="#FFDEC2"/>
+              <stop offset="100%" stop-color="#E8BD9B"/>
+            </radialGradient>
+            <linearGradient id="hoodieH" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#38BDF8"/>
+              <stop offset="100%" stop-color="#0284C7"/>
+            </linearGradient>
+            <radialGradient id="capH" cx="35%" cy="25%" r="70%">
+              <stop offset="0%" stop-color="#38BDF8"/>
+              <stop offset="100%" stop-color="#0369A1"/>
+            </radialGradient>
+          </defs>
+
+          <!-- 후드티 몸통 -->
+          <rect x="72" y="158" width="96" height="82" rx="40" fill="url(#hoodieH)"/>
+          <ellipse cx="120" cy="164" rx="34" ry="12" fill="#0369A1"/>
+          <line x1="108" y1="172" x2="106" y2="196" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="132" y1="172" x2="134" y2="196" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+
+          <!-- 연필 소품 & 손 -->
+          <line x1="62" y1="186" x2="48" y2="108" stroke="#FACC15" stroke-width="7" stroke-linecap="round"/>
+          <polygon points="48,108 43,95 54,104" fill="#FDE68A"/>
+          <circle cx="62" cy="160" r="14" fill="url(#skinH)"/>
+          <circle cx="174" cy="195" r="14" fill="url(#skinH)"/>
+
+          <!-- 귀 -->
+          <ellipse cx="64" cy="108" rx="13" ry="17" fill="url(#skinH)"/>
+          <ellipse cx="176" cy="108" rx="13" ry="17" fill="url(#skinH)"/>
+
+          <!-- 얼굴형 -->
+          <rect x="66" y="48" width="108" height="106" rx="52" fill="url(#skinH)"/>
+
+          <!-- 볼터치 -->
+          <ellipse cx="88" cy="116" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
+          <ellipse cx="152" cy="116" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
+
+          <!-- 눈썹 -->
+          <path d="M 93 84 Q 102 79 110 84" stroke="#3B2F2F" stroke-width="3.8" stroke-linecap="round" fill="none"/>
+          <path d="M 130 84 Q 138 79 147 84" stroke="#3B2F2F" stroke-width="3.8" stroke-linecap="round" fill="none"/>
+
+          <!-- 눈 -->
+          <g class="eye-group">
+            <circle cx="103" cy="102" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="104" cy="101" r="7" fill="#1E1B18"/>
+            <circle cx="106" cy="98" r="2.4" fill="#FFFFFF"/>
+
+            <circle cx="137" cy="102" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="136" cy="101" r="7" fill="#1E1B18"/>
+            <circle cx="138" cy="98" r="2.4" fill="#FFFFFF"/>
+          </g>
+
+          <!-- 해맑은 입 -->
+          <path d="M 111 123 Q 120 133 129 123 Z" fill="#F43F5E"/>
+
+          <!-- 앞머리 & 스카이블루 볼캡 -->
+          <path d="M 76 66 Q 92 80 104 66 Q 118 82 132 66 Q 146 80 164 66 Z" fill="#3B2F2F"/>
+          <path d="M 66 68 C 66 32, 174 32, 174 68 Z" fill="url(#capH)"/>
+          <path d="M 64 66 Q 120 56 176 66 Q 145 78 95 78 Z" fill="#F8FAFC"/>
+        </svg>
+      `,
+      bambi: `
+        <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="furB" cx="42%" cy="32%" r="65%">
+              <stop offset="0%" stop-color="#FDE68A"/>
+              <stop offset="65%" stop-color="#FBBF24"/>
+              <stop offset="100%" stop-color="#D97706"/>
+            </radialGradient>
+            <radialGradient id="earB" cx="40%" cy="30%" r="70%">
+              <stop offset="0%" stop-color="#D97706"/>
+              <stop offset="100%" stop-color="#92400E"/>
+            </radialGradient>
+          </defs>
+
+          <!-- 몸통 & 크림색 배 -->
+          <rect x="76" y="156" width="88" height="84" rx="40" fill="url(#furB)"/>
+          <ellipse cx="120" cy="198" rx="28" ry="34" fill="#FFFBEB"/>
+
+          <!-- 오렌지 반다나 스카프 -->
+          <path d="M 82 158 Q 120 172 158 158 L 154 170 Q 120 184 86 170 Z" fill="#F97316"/>
+          <polygon points="108,168 132,168 120,188" fill="#EA580C"/>
+
+          <!-- 앞발 -->
+          <ellipse cx="88" cy="194" rx="13" ry="16" fill="#FFFBEB"/>
+          <ellipse cx="152" cy="194" rx="13" ry="16" fill="#FFFBEB"/>
+
+          <!-- 강아지 귀 (자연스럽게 양옆으로 처진 귀) -->
+          <ellipse cx="62" cy="104" rx="18" ry="34" fill="url(#earB)" transform="rotate(16 62 104)"/>
+          <ellipse cx="178" cy="104" rx="18" ry="34" fill="url(#earB)" transform="rotate(-16 178 104)"/>
+
+          <!-- 얼굴형 -->
+          <rect x="64" y="48" width="112" height="106" rx="52" fill="url(#furB)"/>
+
+          <!-- 콩알 눈썹 -->
+          <ellipse cx="101" cy="83" rx="6" ry="4" fill="#FFFBEB"/>
+          <ellipse cx="139" cy="83" rx="6" ry="4" fill="#FFFBEB"/>
+
+          <!-- 볼터치 -->
+          <ellipse cx="86" cy="116" rx="12" ry="7" fill="#FF8A80" opacity="0.45"/>
+          <ellipse cx="154" cy="116" rx="12" ry="7" fill="#FF8A80" opacity="0.45"/>
+
+          <!-- 눈 -->
+          <g class="eye-group">
+            <circle cx="102" cy="101" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="103" cy="100" r="7" fill="#1E1B18"/>
+            <circle cx="105" cy="97" r="2.4" fill="#FFFFFF"/>
+
+            <circle cx="138" cy="101" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="137" cy="100" r="7" fill="#1E1B18"/>
+            <circle cx="139" cy="97" r="2.4" fill="#FFFFFF"/>
+          </g>
+
+          <!-- 크림색 주둥이 & 코 & ω 입 -->
+          <ellipse cx="120" cy="122" rx="22" ry="16" fill="#FFFBEB"/>
+          <ellipse cx="120" cy="114" rx="7.5" ry="5" fill="#3E2723"/>
+          <path d="M 111 124 Q 115.5 130 120 124 Q 124.5 130 129 124" stroke="#3E2723" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+        </svg>
+      `,
+      luna: `
+        <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="furL" cx="42%" cy="32%" r="65%">
+              <stop offset="0%" stop-color="#F3E8FF"/>
+              <stop offset="65%" stop-color="#D8B4FE"/>
+              <stop offset="100%" stop-color="#A855F7"/>
+            </radialGradient>
+          </defs>
+
+          <!-- 몸통 & 흰 가슴털 -->
+          <rect x="78" y="156" width="84" height="84" rx="38" fill="url(#furL)"/>
+          <ellipse cx="120" cy="198" rx="26" ry="34" fill="#FAF5FF"/>
+
+          <!-- 핑크 초커 & 골드 방울 -->
+          <path d="M 84 158 Q 120 170 156 158 L 154 167 Q 120 179 86 167 Z" fill="#F472B6"/>
+          <circle cx="120" cy="173" r="8" fill="#FACC15"/>
+          <circle cx="120" cy="174" r="2" fill="#92400E"/>
+
+          <!-- 앞발 -->
+          <ellipse cx="90" cy="194" rx="12" ry="15" fill="#FAF5FF"/>
+          <ellipse cx="150" cy="194" rx="12" ry="15" fill="#FAF5FF"/>
+
+          <!-- 고양이 귀 -->
+          <polygon points="70,84 68,34 106,58" fill="#C084FC"/>
+          <polygon points="75,78 74,45 99,60" fill="#F9A8D4"/>
+          <polygon points="170,84 172,34 134,58" fill="#C084FC"/>
+          <polygon points="165,78 166,45 141,60" fill="#F9A8D4"/>
+
+          <!-- 얼굴형 -->
+          <rect x="64" y="50" width="112" height="104" rx="52" fill="url(#furL)"/>
+
+          <!-- 볼터치 -->
+          <ellipse cx="86" cy="116" rx="12" ry="7" fill="#F472B6" opacity="0.4"/>
+          <ellipse cx="154" cy="116" rx="12" ry="7" fill="#F472B6" opacity="0.4"/>
+
+          <!-- 눈 -->
+          <g class="eye-group">
+            <circle cx="102" cy="101" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="103" cy="100" r="7" fill="#1E1B18"/>
+            <circle cx="105" cy="97" r="2.4" fill="#FFFFFF"/>
+
+            <circle cx="138" cy="101" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="137" cy="100" r="7" fill="#1E1B18"/>
+            <circle cx="139" cy="97" r="2.4" fill="#FFFFFF"/>
+          </g>
+
+          <!-- 핑크 코 & ω 입 & 수염 -->
+          <ellipse cx="120" cy="114" rx="6" ry="4" fill="#F472B6"/>
+          <path d="M 112 122 Q 116 128 120 122 Q 124 128 128 122" stroke="#4A2C40" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <line x1="56" y1="108" x2="76" y2="111" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+          <line x1="56" y1="118" x2="76" y2="117" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+          <line x1="184" y1="108" x2="164" y2="111" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+          <line x1="184" y1="118" x2="164" y2="117" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      `
+    };
+
     // 캐릭터별 문맥 맞춤 대화 데이터베이스
     const characters = {
       haru: {
@@ -341,489 +646,35 @@
       }
     };
 
-    // ================= 밝고 화사한 3D 클레이 캐릭터 엔진 =================
-    function setupBrightRenderer(canvasContainer, width, height) {
-      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-      renderer.setSize(width, height);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      canvasContainer.appendChild(renderer.domElement);
-      return renderer;
-    }
-
-    function setupBrightLights(scene) {
-      // 어두워지지 않도록 전체적으로 화사하고 균일한 스튜디오 조명 배치
-      const ambient = new THREE.AmbientLight(0xffffff, 0.88);
-      scene.add(ambient);
-
-      const frontKey = new THREE.DirectionalLight(0xffffff, 0.48);
-      frontKey.position.set(2.5, 4.5, 6);
-      scene.add(frontKey);
-
-      const leftFill = new THREE.DirectionalLight(0xf8fafc, 0.28);
-      leftFill.position.set(-4, 2, 4);
-      scene.add(leftFill);
-    }
-
-    function build3DCharacterMesh(type) {
-      const group = new THREE.Group();
-      const clay = (color, rough = 0.55) =>
-        new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: 0.0 });
-
-      // 둥근 캡슐형 팔 생성 헬퍼
-      function makeSmoothLimb(radius, length, mat) {
-        const limbGroup = new THREE.Group();
-        const cyl = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, length, 24), mat);
-        const topCap = new THREE.Mesh(new THREE.SphereGeometry(radius, 24, 24), mat);
-        topCap.position.y = length / 2;
-        const botCap = new THREE.Mesh(new THREE.SphereGeometry(radius, 24, 24), mat);
-        botCap.position.y = -length / 2;
-        limbGroup.add(cyl, topCap, botCap);
-        return limbGroup;
-      }
-
-      // 클레이 일러스트 얼굴 (오밀조밀한 눈, 짧은 눈썹, 둥근 귀, 도톰한 입술)
-      function addClayFace(headGroup, eyeY, eyeZ, skinColor, isAnimal = false) {
-        const scleraGeo = new THREE.SphereGeometry(0.145, 32, 32);
-        const scleraMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25 });
-        const pupilGeo = new THREE.SphereGeometry(0.088, 24, 24);
-        const pupilMat = new THREE.MeshStandardMaterial({ color: 0x231f20, roughness: 0.15 });
-
-        [-0.2, 0.2].forEach((x, idx) => {
-          const sclera = new THREE.Mesh(scleraGeo, scleraMat);
-          sclera.scale.set(0.95, 1.05, 0.38);
-          sclera.position.set(x, eyeY, eyeZ);
-
-          const pupil = new THREE.Mesh(pupilGeo, pupilMat);
-          pupil.scale.set(1, 1.05, 0.45);
-          pupil.position.set(x + (idx === 0 ? 0.022 : -0.015), eyeY + 0.015, eyeZ + 0.042);
-
-          headGroup.add(sclera, pupil);
-
-          if (!isAnimal) {
-            const brow = makeSmoothLimb(0.016, 0.08, clay(0x4a3228));
-            brow.position.set(x, eyeY + 0.16, eyeZ + 0.02);
-            brow.rotation.z = Math.PI / 2 + (idx === 0 ? -0.15 : 0.15);
-            headGroup.add(brow);
-          }
-        });
-
-        // 양볼 은은한 복숭아빛 홍조
-        const cheekGeo = new THREE.SphereGeometry(0.14, 24, 24);
-        const cheekMat = new THREE.MeshBasicMaterial({ color: 0xff8a80, transparent: true, opacity: 0.35 });
-        [-0.38, 0.38].forEach(x => {
-          const cheek = new THREE.Mesh(cheekGeo, cheekMat);
-          cheek.scale.set(1.25, 0.75, 0.3);
-          cheek.position.set(x, eyeY - 0.13, eyeZ - 0.04);
-          headGroup.add(cheek);
-        });
-
-        if (!isAnimal) {
-          // 작고 도톰한 살구빛 입술
-          const mouth = new THREE.Mesh(new THREE.SphereGeometry(0.072, 24, 24), clay(0xd96b66, 0.45));
-          mouth.scale.set(1.38, 0.56, 0.5);
-          mouth.position.set(0, eyeY - 0.19, eyeZ + 0.04);
-          headGroup.add(mouth);
-
-          // 통통하고 둥근 귀
-          [-0.76, 0.76].forEach(x => {
-            const ear = new THREE.Mesh(new THREE.SphereGeometry(0.18, 28, 28), clay(skinColor));
-            ear.scale.set(0.62, 1.05, 0.75);
-            ear.position.set(x, eyeY - 0.03, -0.04);
-            headGroup.add(ear);
-          });
-        }
-      }
-
-      if (type === "teacher") {
-        // 1. 선생님 (베레모 + 동그란 안경 + 네이비 베스트 + 초록 책 & 지휘봉)
-        const skinColor = 0xffdfc4;
-
-        // 몸통 (반지름 0.5 -> X: ±0.5, Z: ±0.43)
-        const torso = new THREE.Mesh(new THREE.SphereGeometry(0.52, 36, 36), clay(0x1e3a8a));
-        torso.scale.set(0.95, 1.35, 0.84);
-        torso.position.set(0, -1.16, 0);
-
-        const collar = new THREE.Mesh(new THREE.SphereGeometry(0.27, 24, 24), clay(0xffffff));
-        collar.scale.set(1.1, 0.55, 0.85);
-        collar.position.set(0, -0.66, 0.12);
-        group.add(torso, collar);
-
-        // ★ 팔과 몸통 간격 해결: 어깨(±0.44)에서 자연스럽게 밀착되어 뻗어나오도록 배치
-        const leftArm = makeSmoothLimb(0.135, 0.42, clay(0xffffff));
-        leftArm.position.set(-0.46, -0.96, 0.14);
-        leftArm.rotation.z = -0.36;
-        leftArm.rotation.x = -0.35;
-
-        const rightArm = makeSmoothLimb(0.135, 0.42, clay(0xffffff));
-        rightArm.position.set(0.42, -1.04, 0.18);
-        rightArm.rotation.z = 0.42;
-        rightArm.rotation.x = -0.45;
-        group.add(leftArm, rightArm);
-
-        // 손 위치 (팔 끝과 정확히 연결)
-        const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.175, 28, 28), clay(skinColor));
-        leftHand.position.set(-0.56, -0.76, 0.3);
-        const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.175, 28, 28), clay(skinColor));
-        rightHand.position.set(0.24, -1.12, 0.56);
-        group.add(leftHand, rightHand);
-
-        // 끝이 하얀 지휘봉
-        const stick = makeSmoothLimb(0.022, 0.95, clay(0x3e2723));
-        stick.position.set(-0.61, -0.4, 0.36);
-        stick.rotation.z = 0.14;
-        const stickTip = makeSmoothLimb(0.021, 0.24, clay(0xffffff));
-        stickTip.position.set(-0.67, 0.08, 0.36);
-        stickTip.rotation.z = 0.14;
-        group.add(stick, stickTip);
-
-        // ★ 책이 몸통을 통과하지 않도록 몸통 앞쪽 바깥(z: 0.52)에 배치
-        const bookGroup = new THREE.Group();
-        bookGroup.position.set(0.12, -1.06, 0.52);
-        bookGroup.rotation.z = -0.14;
-        bookGroup.rotation.y = -0.2;
-        const bookCover = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.58, 0.11), clay(0x22c55e));
-        const bookPages = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.54, 0.08), clay(0xffffff));
-        bookPages.position.set(-0.025, 0, 0);
-        const bookmark = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.15, 0.12), clay(0xfacc15));
-        bookmark.position.set(0.11, 0.23, 0);
-        bookGroup.add(bookCover, bookPages, bookmark);
-        group.add(bookGroup);
-
-        // 머리 그룹
-        const headGroup = new THREE.Group();
-        headGroup.position.y = 0.24;
-
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.78, 48, 48), clay(skinColor));
-        head.scale.set(1.02, 0.96, 0.96);
-        headGroup.add(head);
-
-        // ★ 깔끔하게 정돈된 갈색 뒷머리 & 웨이브 (겹침 오류 제거)
-        const hairMat = clay(0x7c5842);
-        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.79, 48, 48, 0, Math.PI * 2, 0, Math.PI * 0.58), hairMat);
-        hairBack.rotation.x = -0.62;
-        hairBack.position.set(0, 0.02, -0.06);
-
-        const ponyTail = new THREE.Mesh(new THREE.SphereGeometry(0.38, 32, 32), hairMat);
-        ponyTail.scale.set(0.95, 1.35, 0.85);
-        ponyTail.position.set(0.28, -0.58, -0.46);
-        ponyTail.rotation.z = 0.18;
-        headGroup.add(hairBack, ponyTail);
-
-        // 다크브라운 베레모 + 꼭지
-        const beretMat = clay(0x36241c);
-        const beret = new THREE.Mesh(new THREE.SphereGeometry(0.85, 48, 36), beretMat);
-        beret.scale.set(1.12, 0.45, 1.12);
-        beret.position.set(0.04, 0.56, -0.02);
-        beret.rotation.z = -0.14;
-        beret.rotation.x = 0.12;
-
-        const beretStem = makeSmoothLimb(0.038, 0.1, beretMat);
-        beretStem.position.set(0.08, 0.95, -0.05);
-        beretStem.rotation.z = -0.14;
-        headGroup.add(beret, beretStem);
-
-        // 얇고 깔끔한 원형 안경
-        const rimMat = clay(0x291d18);
-        [-0.2, 0.2].forEach(x => {
-          const rim = new THREE.Mesh(new THREE.TorusGeometry(0.175, 0.014, 16, 40), rimMat);
-          rim.position.set(x, -0.04, 0.78);
-          headGroup.add(rim);
-        });
-        const bridge = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 0.06, 10), rimMat);
-        bridge.rotation.z = Math.PI / 2;
-        bridge.position.set(0, -0.03, 0.79);
-        headGroup.add(bridge);
-
-        addClayFace(headGroup, -0.03, 0.73, skinColor, false);
-        group.add(headGroup);
-        group.userData.head = headGroup;
-
-      } else if (type === "haru") {
-        // 2. 하루 (스카이블루 볼캡 + 후드티 + 밀착된 팔 + 연필)
-        const skinColor = 0xffe2c8;
-
-        const torso = new THREE.Mesh(new THREE.SphereGeometry(0.53, 36, 36), clay(0x38bdf8));
-        torso.scale.set(0.95, 1.35, 0.85);
-        torso.position.set(0, -1.16, 0);
-
-        const hood = new THREE.Mesh(new THREE.TorusGeometry(0.41, 0.11, 20, 36), clay(0x0284c7));
-        hood.rotation.x = Math.PI / 2.1;
-        hood.position.set(0, -0.68, -0.02);
-        group.add(torso, hood);
-
-        // ★ 팔과 몸통 밀착 배치
-        const leftArm = makeSmoothLimb(0.135, 0.42, clay(0x38bdf8));
-        leftArm.position.set(-0.46, -0.96, 0.14);
-        leftArm.rotation.z = -0.36;
-        leftArm.rotation.x = -0.35;
-
-        const rightArm = makeSmoothLimb(0.135, 0.42, clay(0x38bdf8));
-        rightArm.position.set(0.46, -1.06, 0.1);
-        rightArm.rotation.z = 0.24;
-        group.add(leftArm, rightArm);
-
-        const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.175, 28, 28), clay(skinColor));
-        leftHand.position.set(-0.56, -0.76, 0.3);
-        const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.175, 28, 28), clay(skinColor));
-        rightHand.position.set(0.52, -1.28, 0.14);
-        group.add(leftHand, rightHand);
-
-        // 노란 연필 소품
-        const pencil = makeSmoothLimb(0.032, 0.78, clay(0xfacc15));
-        pencil.position.set(-0.6, -0.48, 0.34);
-        pencil.rotation.z = 0.16;
-        const pencilTip = new THREE.Mesh(new THREE.ConeGeometry(0.032, 0.12, 16), clay(0xfde68a));
-        pencilTip.position.set(-0.66, -0.04, 0.34);
-        pencilTip.rotation.z = 0.16;
-        group.add(pencil, pencilTip);
-
-        const headGroup = new THREE.Group();
-        headGroup.position.y = 0.24;
-
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.78, 48, 48), clay(skinColor));
-        head.scale.set(1.02, 0.96, 0.96);
-        headGroup.add(head);
-
-        // ★ 깔끔한 다크브라운 뒷머리
-        const hairMat = clay(0x3b2f2f);
-        const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.79, 48, 48, 0, Math.PI * 2, 0, Math.PI * 0.56), hairMat);
-        hairBack.rotation.x = -0.68;
-        hairBack.position.set(0, 0.04, -0.05);
-        headGroup.add(hairBack);
-
-        // 스카이블루 & 화이트 볼캡
-        const capCrown = new THREE.Mesh(new THREE.SphereGeometry(0.81, 48, 36, 0, Math.PI * 2, 0, Math.PI * 0.5), clay(0x0ea5e9));
-        capCrown.position.set(0, 0.16, 0);
-        capCrown.rotation.x = -0.15;
-
-        const capVisor = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.62, 0.05, 36, 1, false, -Math.PI * 0.42, Math.PI * 0.84), clay(0xf8fafc));
-        capVisor.position.set(0, 0.34, 0.48);
-        capVisor.rotation.x = 0.25;
-        headGroup.add(capCrown, capVisor);
-
-        addClayFace(headGroup, -0.04, 0.73, skinColor, false);
-        group.add(headGroup);
-        group.userData.head = headGroup;
-
-      } else if (type === "bambi") {
-        // 3. 밤비 (아기 강아지: 자연스럽게 내려오는 강아지 귀 + 몸에 밀착된 앞발)
-        const furMain = clay(0xfcd34d);
-        const furCream = clay(0xfffbeb);
-
-        const body = new THREE.Mesh(new THREE.SphereGeometry(0.52, 36, 36), furMain);
-        body.scale.set(0.95, 1.32, 0.86);
-        body.position.set(0, -1.16, 0);
-        const belly = new THREE.Mesh(new THREE.SphereGeometry(0.39, 28, 28), furCream);
-        belly.position.set(0, -1.16, 0.26);
-
-        const scarf = new THREE.Mesh(new THREE.TorusGeometry(0.41, 0.085, 20, 36), clay(0xf97316));
-        scarf.rotation.x = Math.PI / 2.05;
-        scarf.position.y = -0.68;
-        group.add(body, belly, scarf);
-
-        // ★ 몸통 옆면에 딱 붙은 앙증맞은 앞발
-        [-0.4, 0.4].forEach(x => {
-          const paw = new THREE.Mesh(new THREE.SphereGeometry(0.17, 28, 28), furCream);
-          paw.position.set(x, -1.18, 0.32);
-          group.add(paw);
-        });
-
-        const headGroup = new THREE.Group();
-        headGroup.position.y = 0.24;
-
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.8, 48, 48), furMain);
-        head.scale.set(1.05, 0.94, 0.96);
-        headGroup.add(head);
-
-        const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.28, 32, 32), furCream);
-        muzzle.scale.set(1.25, 0.82, 0.75);
-        muzzle.position.set(0, -0.17, 0.68);
-        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.075, 20, 20), clay(0x3e2723));
-        nose.scale.set(1.2, 0.85, 0.8);
-        nose.position.set(0, -0.09, 0.88);
-        headGroup.add(muzzle, nose);
-
-        // ★ 강아지 귀 방향 수정: 위쪽 머리 옆에서 바깥쪽 아래로 자연스럽게 늘어지는 귀
-        [-0.82, 0.82].forEach((x, idx) => {
-          const ear = new THREE.Mesh(new THREE.SphereGeometry(0.26, 28, 28), clay(0xd97706));
-          ear.scale.set(0.58, 1.35, 0.75);
-          ear.position.set(x, 0.02, 0.02);
-          ear.rotation.z = idx === 0 ? -0.26 : 0.26; // 바깥쪽으로 자연스럽게 벌어짐
-          headGroup.add(ear);
-        });
-
-        addClayFace(headGroup, 0.02, 0.74, furMain, true);
-        group.add(headGroup);
-        group.userData.head = headGroup;
-
-      } else if (type === "luna") {
-        // 4. 루나 (달빛 고양이: 몸에 밀착된 앞발)
-        const furLavender = clay(0xd8b4fe);
-        const furWhite = clay(0xfdf4ff);
-
-        const body = new THREE.Mesh(new THREE.SphereGeometry(0.5, 36, 36), furLavender);
-        body.scale.set(0.95, 1.32, 0.86);
-        body.position.set(0, -1.16, 0);
-        const chest = new THREE.Mesh(new THREE.SphereGeometry(0.37, 28, 28), furWhite);
-        chest.position.set(0, -1.16, 0.25);
-
-        const choker = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.065, 20, 36), clay(0xf472b6));
-        choker.rotation.x = Math.PI / 2.05;
-        choker.position.y = -0.68;
-        const bell = new THREE.Mesh(new THREE.SphereGeometry(0.09, 20, 20), clay(0xfacc15));
-        bell.position.set(0, -0.72, 0.42);
-        group.add(body, chest, choker, bell);
-
-        // ★ 몸통에 밀착된 앞발
-        [-0.38, 0.38].forEach(x => {
-          const paw = new THREE.Mesh(new THREE.SphereGeometry(0.16, 28, 28), furWhite);
-          paw.position.set(x, -1.18, 0.3);
-          group.add(paw);
-        });
-
-        const headGroup = new THREE.Group();
-        headGroup.position.y = 0.24;
-
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.8, 48, 48), furLavender);
-        head.scale.set(1.06, 0.93, 0.95);
-        headGroup.add(head);
-
-        [-0.5, 0.5].forEach((x, idx) => {
-          const ear = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.5, 28), clay(0xc084fc));
-          ear.position.set(x, 0.72, 0);
-          ear.rotation.z = idx === 0 ? 0.34 : -0.34;
-          const innerEar = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.32, 24), clay(0xf9a8d4));
-          innerEar.position.set(x, 0.69, 0.07);
-          innerEar.rotation.z = idx === 0 ? 0.34 : -0.34;
-          headGroup.add(ear, innerEar);
-        });
-
-        const nose = new THREE.Mesh(new THREE.SphereGeometry(0.06, 16, 16), clay(0xf472b6));
-        nose.scale.set(1.2, 0.85, 0.8);
-        nose.position.set(0, -0.1, 0.78);
-        headGroup.add(nose);
-
-        [-1, 1].forEach(dir => {
-          [-0.08, -0.16].forEach(y => {
-            const whisker = makeSmoothLimb(0.011, 0.3, clay(0xffffff));
-            whisker.rotation.z = Math.PI / 2 + (y * dir * 0.35);
-            whisker.position.set(dir * 0.72, y, 0.52);
-            headGroup.add(whisker);
-          });
-        });
-
-        addClayFace(headGroup, 0.01, 0.74, furLavender, true);
-        group.add(headGroup);
-        group.userData.head = headGroup;
-      }
-
-      return group;
-    }
-
-    // 선택 카드용 미니 3D 프리뷰
-    function renderCardPreviews() {
-      ["haru", "teacher", "bambi", "luna"].forEach(type => {
-        const container = document.getElementById(`preview-${type}`);
-        container.innerHTML = "";
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
-        camera.position.set(0, -0.24, 4.75);
-
-        const renderer = setupBrightRenderer(container, 128, 128);
-        setupBrightLights(scene);
-
-        const mesh = build3DCharacterMesh(type);
-        scene.add(mesh);
-
-        function animatePreview() {
-          requestAnimationFrame(animatePreview);
-          mesh.rotation.y = Math.sin(Date.now() * 0.0022) * 0.25;
-          mesh.position.y = Math.sin(Date.now() * 0.0032) * 0.04;
-          renderer.render(scene, camera);
-        }
-        animatePreview();
-      });
-    }
-
-    // 메인 3D 무대 관리
-    let mainScene = null, mainCamera = null, mainRenderer = null, activeMesh = null;
-    let animFrameId = null;
-    let targetRotY = 0, targetRotX = 0;
-    let isDragging = false, prevMouseX = 0;
-    let isThinkingAnim = false;
-
-    function initMain3DStage(charKey) {
-      if (animFrameId) cancelAnimationFrame(animFrameId);
-      const container = document.getElementById("threeCanvasContainer");
-      container.innerHTML = "";
-
-      const width = container.clientWidth || 450;
-      const height = container.clientHeight || 230;
-
-      mainScene = new THREE.Scene();
-      mainCamera = new THREE.PerspectiveCamera(34, width / height, 0.1, 100);
-      mainCamera.position.set(0, -0.26, 4.7);
-
-      mainRenderer = setupBrightRenderer(container, width, height);
-      setupBrightLights(mainScene);
-
-      activeMesh = build3DCharacterMesh(charKey);
-      mainScene.add(activeMesh);
-
-      const wrapper = document.getElementById("stageWrapper");
-      wrapper.onmousedown = e => { isDragging = true; prevMouseX = e.clientX; };
-      window.onmouseup = () => { isDragging = false; };
-      wrapper.onmousemove = e => {
-        if (isDragging) {
-          targetRotY += (e.clientX - prevMouseX) * 0.015;
-          prevMouseX = e.clientX;
-        } else {
-          const rect = wrapper.getBoundingClientRect();
-          const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-          const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-          targetRotY = nx * 0.45;
-          targetRotX = ny * 0.16;
-        }
-      };
-
-      wrapper.ontouchstart = e => { isDragging = true; prevMouseX = e.touches[0].clientX; };
-      wrapper.ontouchend = () => { isDragging = false; };
-      wrapper.ontouchmove = e => {
-        if (isDragging && e.touches[0]) {
-          targetRotY += (e.touches[0].clientX - prevMouseX) * 0.018;
-          prevMouseX = e.touches[0].clientX;
-        }
-      };
-
-      function animateMain() {
-        animFrameId = requestAnimationFrame(animateMain);
-        if (!activeMesh || !mainRenderer) return;
-
-        const t = Date.now() * 0.003;
-        activeMesh.rotation.y += (targetRotY - activeMesh.rotation.y) * 0.09;
-        if (activeMesh.userData.head) {
-          activeMesh.userData.head.rotation.x += (targetRotX - activeMesh.userData.head.rotation.x) * 0.09;
-        }
-
-        if (isThinkingAnim) {
-          activeMesh.position.y = Math.abs(Math.sin(t * 2.5)) * 0.14;
-          if (activeMesh.userData.head) {
-            activeMesh.userData.head.rotation.z = Math.sin(t * 2.5) * 0.1;
-          }
-        } else {
-          activeMesh.position.y = Math.sin(t) * 0.045;
-          if (activeMesh.userData.head) {
-            activeMesh.userData.head.rotation.z *= 0.9;
-          }
-        }
-
-        mainRenderer.render(mainScene, mainCamera);
-      }
-      animateMain();
-    }
-
+    // ================= 초기화 & 시선 인터랙션 =================
     window.onload = () => {
-      renderCardPreviews();
+      ["haru", "teacher", "bambi", "luna"].forEach(key => {
+        document.getElementById(`preview-${key}`).innerHTML = characterSVGs[key];
+      });
+
+      const stage = document.getElementById("stageWrapper");
+      stage.addEventListener("mousemove", (e) => {
+        const actor = document.getElementById("characterActor");
+        if (!actor) return;
+        const rect = stage.getBoundingClientRect();
+        const nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+
+        actor.style.transform = `rotateY(${nx * 14}deg) rotateX(${-ny * 8}deg)`;
+        const pupils = actor.querySelectorAll(".pupil");
+        pupils.forEach(p => {
+          p.style.transform = `translate(${nx * 2.5}px, ${ny * 2}px)`;
+        });
+      });
+
+      stage.addEventListener("mouseleave", () => {
+        const actor = document.getElementById("characterActor");
+        if (!actor) return;
+        actor.style.transform = "rotateY(0deg) rotateX(0deg)";
+        actor.querySelectorAll(".pupil").forEach(p => {
+          p.style.transform = "translate(0px, 0px)";
+        });
+      });
     };
 
     // ================= 대화 저장(localStorage) & 문맥 인식 엔진 =================
@@ -873,8 +724,6 @@
     function selectCharacter(charKey) {
       currentCharKey = charKey;
       currentChar = characters[charKey];
-      targetRotY = 0;
-      targetRotX = 0;
 
       document.getElementById("selectScreen").style.display = "none";
       document.getElementById("chatScreen").style.display = "flex";
@@ -884,8 +733,7 @@
       document.getElementById("headerName").innerText = currentChar.name;
       document.getElementById("headerRole").innerText = currentChar.role;
       document.getElementById("stageWrapper").style.background = currentChar.stageBg;
-
-      setTimeout(() => initMain3DStage(charKey), 30);
+      document.getElementById("characterActor").innerHTML = characterSVGs[charKey];
 
       const savedData = loadChatHistory(charKey);
       chatHistory = savedData.messages || [];
@@ -909,8 +757,6 @@
 
     function goBack() {
       if (isTyping) return;
-      if (animFrameId) cancelAnimationFrame(animFrameId);
-      activeMesh = null;
       document.getElementById("chatScreen").style.display = "none";
       document.getElementById("selectScreen").style.display = "flex";
     }
@@ -931,7 +777,6 @@
     function getSmartResponse(text) {
       const clean = text.replace(/[!?.,~ㅋㅎㅠㅜ\s]/g, "");
 
-      // 1. Level 3: 긴급 위기 키워드 감지 (최우선)
       const dangerWords = ["죽고", "사라지고", "자해", "끝내고", "살기싫", "자살"];
       if (dangerWords.some(w => clean.includes(w))) {
         return {
@@ -941,28 +786,23 @@
         };
       }
 
-      // 2. 가벼운 인사 문맥 처리
       const exactGreetings = ["안녕", "안녕하세요", "하이", "헬로", "반가워", "안뇽", "야", "저기", "있잖아"];
       if (exactGreetings.includes(clean) || clean.startsWith("안녕")) {
         return { tag: "일상 인사 · Level 1", isDanger: false, reply: currentChar.smallTalk.hi };
       }
 
-      // 3. 안부 묻기
       if (["잘지냈", "뭐해", "뭐하고", "어떻게지내", "기분어때"].some(w => clean.includes(w))) {
         return { tag: "일상 안부 · Level 1", isDanger: false, reply: currentChar.smallTalk.howAreYou };
       }
 
-      // 4. 심심함/일상 수다 문맥 처리
       if (["심심", "놀자", "그냥", "심심해"].some(w => clean.includes(w))) {
         return { tag: "일상 대화 · Level 1", isDanger: false, reply: currentChar.smallTalk.bored };
       }
 
-      // 5. 감사 인사 문맥 처리
       if (["고마워", "감사", "땡큐", "고맙"].some(w => clean.includes(w))) {
         return { tag: "일상 대화 · Level 1", isDanger: false, reply: currentChar.smallTalk.thanks };
       }
 
-      // 6. RAG 전문 상담 매뉴얼 검색
       if (["시험", "성적", "공부", "진로", "대학", "불안", "모의고사", "숙제", "학원", "점수"].some(w => text.includes(w))) {
         lastTopic = "study";
         return { tag: "학업·진로 매뉴얼 · Level 1", isDanger: false, reply: currentChar.manual.study };
@@ -983,14 +823,12 @@
         return { tag: "정서 안정 매뉴얼 · Level 2", isDanger: false, reply: currentChar.manual.tired };
       }
 
-      // 7. 직전 주제 후속 반응 연결
       if (lastTopic && (["어떻게", "모르겠", "막막", "맞아", "그래", "응", "어"].some(w => clean.includes(w)) || clean.length <= 4)) {
         const topicReply = currentChar.followUp[lastTopic];
         lastTopic = null;
         return { tag: "맥락 심화 상담 · Level 2", isDanger: false, reply: topicReply };
       }
 
-      // 8. 긍정/부정 짧은 대답 처리
       if (["응", "어", "맞아", "그래", "네", "예"].includes(clean)) {
         return { tag: "대화 이어가기 · Level 1", isDanger: false, reply: currentChar.smallTalk.yes };
       }
@@ -1001,7 +839,6 @@
         return { tag: "대화 이어가기 · Level 1", isDanger: false, reply: currentChar.smallTalk.short };
       }
 
-      // 9. 일반 서술 문장일 때 자연스럽게 질문 유도
       const randomFallback = currentChar.fallback[Math.floor(Math.random() * currentChar.fallback.length)];
       return { tag: "정서 공감 매뉴얼 · Level 1", isDanger: false, reply: randomFallback };
     }
@@ -1038,8 +875,8 @@
 
     function showTypingAndReply(replyHtml, tagText, isDanger) {
       isTyping = true;
-      isThinkingAnim = true;
       document.getElementById("sendBtn").disabled = true;
+      document.getElementById("characterActor").classList.add("thinking");
 
       const statusPill = document.getElementById("statusPill");
       statusPill.innerText = `✍️ ${currentChar.name}가 답장 적는 중...`;
@@ -1064,7 +901,7 @@
         const indicator = document.getElementById("typingIndicator");
         if (indicator) indicator.remove();
 
-        isThinkingAnim = false;
+        document.getElementById("characterActor").classList.remove("thinking");
         statusPill.innerText = "● 이야기 듣는 중";
         statusPill.style.color = "#334155";
 
