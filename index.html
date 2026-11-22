@@ -4,115 +4,519 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>마음온(On) - 3D AI 심리 상담소</title>
+<title>마음온 (On) - 3D 마음 상담소</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
 <style>
-*{box-sizing:border-box;font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif}
-body{margin:0;padding:12px;min-height:100vh;display:flex;justify-content:center;align-items:center;background:radial-gradient(circle at top left,#eef2ff,#fdf4ff,#fff7ed)}
-button{cursor:pointer}
-.app-container{width:100%;max-width:450px;height:90vh;max-height:850px;background:white;border-radius:28px;box-shadow:0 18px 45px #1e293b1f;overflow:hidden;display:flex;flex-direction:column;border:1px solid #f1f5f9;position:relative}
-.select-screen{flex:1;padding:25px 18px;overflow-y:auto;background:linear-gradient(180deg,#fafbff,#fff)}
-.select-header{text-align:center;margin-bottom:18px}
-.select-header h2{color:#1e293b;font-size:22px;margin:0 0 8px}
-.select-header p{color:#64748b;font-size:13px;line-height:1.6}
-.char-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-.char-card{background:white;border:2px solid #f1f5f9;border-radius:21px;padding:12px 9px;display:flex;flex-direction:column;align-items:center;text-align:center;transition:.2s}
-.char-card:hover{border-color:#818cf8;transform:translateY(-3px)}
-.card-3d-preview{width:120px;height:120px;border-radius:18px;overflow:hidden;margin-bottom:9px}
-.card-3d-preview canvas{display:block}
-.card-badge{font-size:10px;font-weight:bold;padding:4px 9px;border-radius:12px;margin-bottom:6px}
-.char-card h3{margin:0 0 5px;font-size:16px}
-.char-card p{margin:0;font-size:11px;color:#64748b;line-height:1.5}
-.chat-screen{display:none;flex-direction:column;height:100%}
-.top-bar{padding:13px 15px;color:white;display:flex;align-items:center;justify-content:space-between}
-.top-bar-title h3{margin:0;font-size:16px}
-.top-bar-title span{font-size:10px;opacity:.85}
-.top-actions{display:flex;gap:5px}
-.top-btn{background:#ffffff38;border:0;color:white;border-radius:12px;padding:7px 9px;font-size:10px;font-weight:bold}
-.stage-3d-wrapper{height:195px;flex-shrink:0;position:relative;overflow:hidden;border-bottom:1px solid #f1f5f9;cursor:grab;touch-action:pan-y}
-#threeCanvasContainer{width:100%;height:100%}
-.stage-hint{position:absolute;top:9px;left:12px;background:#ffffffcc;border-radius:10px;padding:4px 8px;font-size:10px;color:#64748b;pointer-events:none;z-index:2}
-.status-pill{position:absolute;bottom:9px;right:12px;background:white;border-radius:12px;padding:5px 10px;font-size:10px;box-shadow:0 2px 8px #0001;z-index:2}
-.mood-area{padding:11px 12px;background:white;border-bottom:1px solid #f1f5f9}
-.mood-title{font-size:11px;color:#64748b;margin-bottom:8px}
-.mood-buttons{display:flex;justify-content:space-between;gap:5px}
-.mood-btn{border:1px solid #e2e8f0;background:white;border-radius:12px;padding:7px 3px;flex:1;font-size:11px;color:#475569}
-.mood-btn.selected{background:#eef2ff;border:1.5px solid #818cf8;color:#4338ca;font-weight:bold}
-.chat-box{flex:1;padding:15px 13px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;background:#f8fafc}
-.msg-row{display:flex;flex-direction:column;max-width:85%}
-.bot-row{align-self:flex-start}
-.user-row{align-self:flex-end;align-items:flex-end}
-.sender-label{font-size:10px;color:#64748b;margin:0 0 4px 5px}
-.bubble{padding:11px 14px;border-radius:17px;font-size:13px;line-height:1.6;word-break:keep-all;white-space:pre-wrap;box-shadow:0 2px 7px #00000008}
-.bot-bubble{background:white;color:#1e293b;border:1px solid #e2e8f0;border-top-left-radius:4px}
-.user-bubble{color:white;border-top-right-radius:4px}
-.tag{display:inline-block;font-size:10px;padding:3px 7px;border-radius:6px;background:#f1f5f9;color:#64748b;margin-bottom:6px}
-.danger-bubble{background:#fff5f5;color:#991b1b;border:1px solid #fca5a5}
-.typing-dots{display:flex;gap:5px;padding:13px}
-.dot{width:7px;height:7px;border-radius:50%;background:#94a3b8;animation:bounce 1.2s infinite}
-.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
-@keyframes bounce{0%,80%,100%{transform:scale(.7);opacity:.5}40%{transform:scale(1.1);opacity:1}}
-.input-area{display:flex;padding:10px;gap:7px;background:white;border-top:1px solid #e2e8f0}
-#userInput{flex:1;min-width:0;border:1.5px solid #cbd5e1;border-radius:22px;padding:11px 14px;font-size:13px;outline:none}
-#userInput:focus{border-color:#818cf8}
-.send-btn{border:0;border-radius:22px;color:white;padding:0 17px;font-weight:bold;font-size:13px}
-.modal{display:none;position:absolute;inset:0;background:#0f172a66;z-index:20;align-items:center;justify-content:center;padding:20px}
-.modal-content{width:100%;max-height:80%;overflow-y:auto;background:white;border-radius:22px;padding:20px}
-.modal-content h3{margin-top:0;color:#1e293b}
-.modal-content p{font-size:13px;color:#475569;line-height:1.7}
-.modal-close{width:100%;padding:11px;border:0;border-radius:12px;background:#6366f1;color:white;margin-top:12px;font-weight:bold}
-.summary-text{background:#f8fafc;padding:13px;border-radius:13px;white-space:pre-wrap;font-size:13px;line-height:1.7}
-.small-note{font-size:10px;color:#94a3b8;text-align:center;padding:6px}
-@media(max-height:680px){.stage-3d-wrapper{height:145px}.select-screen{padding:15px}}
-@media(max-width:360px){.top-btn{padding:6px;font-size:9px}.mood-btn{font-size:10px}}
+* {
+  box-sizing: border-box;
+  font-family: 'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 12px;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at top left,#eef2ff,#fdf4ff,#fff7ed);
+}
+
+button { cursor: pointer; }
+
+.app-container {
+  width: 100%;
+  max-width: 460px;
+  height: 92vh;
+  max-height: 880px;
+  min-height: 560px;
+  background: white;
+  border-radius: 28px;
+  box-shadow: 0 18px 45px rgba(30,41,59,.12);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #f1f5f9;
+  position: relative;
+}
+
+/* 캐릭터 선택 */
+
+.select-screen {
+  flex: 1;
+  padding: 25px 18px;
+  overflow-y: auto;
+  background: linear-gradient(180deg,#fafbff,#fff);
+}
+
+.select-header {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.select-header h2 {
+  color: #1e293b;
+  font-size: 24px;
+  margin: 0 0 8px;
+}
+
+.select-header p {
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.char-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+
+.char-card {
+  background: white;
+  border: 2px solid #f1f5f9;
+  border-radius: 21px;
+  padding: 12px 9px 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: .2s;
+}
+
+.char-card:hover {
+  border-color: #a5b4fc;
+  transform: translateY(-3px);
+}
+
+.card-3d-preview {
+  width: 100%;
+  height: 145px;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 9px;
+  background: linear-gradient(145deg,#fff5ec,#f1e6df);
+}
+
+.card-3d-preview canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.card-badge {
+  font-size: 10px;
+  font-weight: bold;
+  padding: 4px 9px;
+  border-radius: 12px;
+  margin-bottom: 6px;
+}
+
+.char-card h3 {
+  margin: 0 0 5px;
+  font-size: 16px;
+}
+
+.char-card p {
+  margin: 0;
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* 채팅 */
+
+.chat-screen {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.top-bar {
+  padding: 13px 15px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.top-bar-title h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.top-bar-title span {
+  font-size: 10px;
+  opacity: .85;
+}
+
+.top-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.top-btn {
+  background: rgba(255,255,255,.22);
+  border: 0;
+  color: white;
+  border-radius: 12px;
+  padding: 7px 8px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* 3D 무대 */
+
+.stage-3d-wrapper {
+  height: 205px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid #f1e8df;
+  background: linear-gradient(180deg,#f9eee7,#f2e4db);
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+#threeCanvasContainer {
+  width: 100%;
+  height: 100%;
+}
+
+#threeCanvasContainer canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.stage-hint {
+  position: absolute;
+  top: 9px;
+  left: 12px;
+  background: #ffffffcc;
+  border-radius: 10px;
+  padding: 4px 8px;
+  font-size: 10px;
+  color: #64748b;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.status-pill {
+  position: absolute;
+  bottom: 9px;
+  right: 12px;
+  background: white;
+  border-radius: 12px;
+  padding: 5px 10px;
+  font-size: 10px;
+  box-shadow: 0 2px 8px #0001;
+  z-index: 2;
+}
+
+/* 기분 기록 */
+
+.mood-area {
+  padding: 11px 12px;
+  background: white;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.mood-title {
+  font-size: 11px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.mood-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+}
+
+.mood-btn {
+  border: 1px solid #e2e8f0;
+  background: white;
+  border-radius: 12px;
+  padding: 7px 3px;
+  flex: 1;
+  font-size: 11px;
+  color: #475569;
+}
+
+.mood-btn.selected {
+  background: #eef2ff;
+  border: 1.5px solid #818cf8;
+  color: #4338ca;
+  font-weight: bold;
+}
+
+/* 대화창 */
+
+.chat-box {
+  flex: 1;
+  min-height: 0;
+  padding: 15px 13px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f8fafc;
+}
+
+.msg-row {
+  display: flex;
+  flex-direction: column;
+  max-width: 85%;
+}
+
+.bot-row { align-self: flex-start; }
+.user-row {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.sender-label {
+  font-size: 10px;
+  color: #64748b;
+  margin: 0 0 4px 5px;
+}
+
+.bubble {
+  padding: 11px 14px;
+  border-radius: 17px;
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: keep-all;
+  white-space: pre-wrap;
+  box-shadow: 0 2px 7px #00000008;
+}
+
+.bot-bubble {
+  background: white;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  border-top-left-radius: 4px;
+}
+
+.user-bubble {
+  color: white;
+  border-top-right-radius: 4px;
+}
+
+.tag {
+  display: inline-block;
+  font-size: 10px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.danger-bubble {
+  background: #fff5f5;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 5px;
+  padding: 13px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+  animation: bounce 1.2s infinite;
+}
+
+.dot:nth-child(2) { animation-delay: .2s; }
+.dot:nth-child(3) { animation-delay: .4s; }
+
+@keyframes bounce {
+  0%,80%,100% {
+    transform: scale(.7);
+    opacity: .5;
+  }
+  40% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* 입력 */
+
+.input-area {
+  display: flex;
+  padding: 10px;
+  gap: 7px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+}
+
+#userInput {
+  flex: 1;
+  min-width: 0;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 22px;
+  padding: 11px 14px;
+  font-size: 13px;
+  outline: none;
+}
+
+#userInput:focus { border-color: #818cf8; }
+
+.send-btn {
+  border: 0;
+  border-radius: 22px;
+  color: white;
+  padding: 0 17px;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+/* 보조창 */
+
+.modal {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: #0f172a66;
+  z-index: 20;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-content {
+  width: 100%;
+  max-height: 80%;
+  overflow-y: auto;
+  background: white;
+  border-radius: 22px;
+  padding: 20px;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  color: #1e293b;
+}
+
+.modal-content p {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.modal-close {
+  width: 100%;
+  padding: 11px;
+  border: 0;
+  border-radius: 12px;
+  background: #6366f1;
+  color: white;
+  margin-top: 12px;
+  font-weight: bold;
+}
+
+.summary-text {
+  background: #f8fafc;
+  padding: 13px;
+  border-radius: 13px;
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.small-note {
+  font-size: 10px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 6px;
+}
+
+@media(max-height:680px) {
+  .stage-3d-wrapper { height: 145px; }
+  .card-3d-preview { height: 115px; }
+  .select-screen { padding: 15px; }
+}
 </style>
 </head>
+
 <body>
+
 <div class="app-container">
+
   <div class="select-screen" id="selectScreen">
     <div class="select-header">
       <h2>마음온 (On) ☁️</h2>
-      <p>오늘 누구랑 이야기할까?<br>네 마음을 편하게 이야기해 봐.</p>
+      <p>오늘 누구랑 이야기할까?<br>
+      네 마음을 편하게 이야기해 봐.</p>
     </div>
+
     <div class="char-grid">
+
       <div class="char-card" onclick="selectCharacter('haru')">
-        <div class="card-3d-preview" style="background:#e0f2fe" id="preview-haru"></div>
+        <div class="card-3d-preview" id="preview-haru"></div>
         <span class="card-badge" style="background:#bae6fd;color:#0369a1">동갑내기 친구</span>
-        <h3>하루</h3><p>편하게 반말로 이야기하는 단짝 친구</p>
+        <h3>하루</h3>
+        <p>편하게 반말로 이야기하는 단짝 친구</p>
       </div>
+
       <div class="char-card" onclick="selectCharacter('teacher')">
-        <div class="card-3d-preview" style="background:#dcfce7" id="preview-teacher"></div>
+        <div class="card-3d-preview" id="preview-teacher"></div>
         <span class="card-badge" style="background:#bbf7d0;color:#15803d">상담 선생님</span>
-        <h3>선생님</h3><p>차분하게 이야기를 들어주는 선생님</p>
+        <h3>선생님</h3>
+        <p>차분하게 이야기를 들어주는 선생님</p>
       </div>
+
       <div class="char-card" onclick="selectCharacter('bambi')">
-        <div class="card-3d-preview" style="background:#ffedd5" id="preview-bambi"></div>
+        <div class="card-3d-preview" id="preview-bambi"></div>
         <span class="card-badge" style="background:#fed7aa;color:#c2410c">아기 강아지</span>
-        <h3>밤비</h3><p>꼬리를 흔들며 기다리는 귀여운 강아지</p>
+        <h3>밤비</h3>
+        <p>꼬리를 흔들며 기다리는 귀여운 강아지</p>
       </div>
+
       <div class="char-card" onclick="selectCharacter('luna')">
-        <div class="card-3d-preview" style="background:#f3e8ff" id="preview-luna"></div>
+        <div class="card-3d-preview" id="preview-luna"></div>
         <span class="card-badge" style="background:#e9d5ff;color:#7e22ce">달빛 고양이</span>
-        <h3>루나</h3><p>복잡한 생각을 차분하게 정리해 주는 고양이</p>
+        <h3>루나</h3>
+        <p>복잡한 생각을 차분하게 정리해 주는 고양이</p>
       </div>
+
     </div>
+
     <p class="small-note">대화 기록은 이 브라우저에 저장됩니다.</p>
   </div>
 
   <div class="chat-screen" id="chatScreen">
+
     <div class="top-bar" id="topBar">
-      <div class="top-bar-title"><h3 id="headerName">하루</h3><span id="headerRole">단짝 친구</span></div>
+      <div class="top-bar-title">
+        <h3 id="headerName">하루</h3>
+        <span id="headerRole">단짝 친구</span>
+      </div>
+
       <div class="top-actions">
         <button class="top-btn" onclick="showSummary()">대화 요약</button>
         <button class="top-btn" onclick="clearHistory()">초기화</button>
         <button class="top-btn" onclick="goBack()">변경</button>
       </div>
     </div>
+
     <div class="stage-3d-wrapper" id="stageWrapper">
       <div class="stage-hint">↔ 좌우로 움직여 보세요</div>
       <div id="threeCanvasContainer"></div>
       <div class="status-pill" id="statusPill">● 이야기 듣는 중</div>
     </div>
+
     <div class="mood-area">
       <div class="mood-title">오늘의 기분은 어때요?</div>
       <div class="mood-buttons">
@@ -123,12 +527,20 @@ button{cursor:pointer}
         <button class="mood-btn" onclick="recordMood('😡','화남',this)">😡 화남</button>
       </div>
     </div>
+
     <div class="chat-box" id="chatBox"></div>
+
     <div class="input-area">
-      <input id="userInput" type="text" placeholder="인사나 고민을 편하게 적어봐..." maxlength="1000">
+      <input id="userInput" type="text"
+        placeholder="인사나 고민을 편하게 적어봐..."
+        maxlength="1000">
       <button class="send-btn" id="sendBtn" onclick="sendMessage()">전송</button>
     </div>
-    <div class="small-note">마음온은 전문 상담을 대체하지 않으며, 대화는 브라우저에 저장됩니다.</div>
+
+    <div class="small-note">
+      마음온은 전문 상담을 대체하지 않으며, 대화는 브라우저에 저장됩니다.
+    </div>
+
   </div>
 
   <div class="modal" id="summaryModal">
@@ -138,6 +550,7 @@ button{cursor:pointer}
       <button class="modal-close" onclick="closeModal('summaryModal')">닫기</button>
     </div>
   </div>
+
   <div class="modal" id="privacyModal">
     <div class="modal-content">
       <h3>개인정보 및 저장 안내</h3>
@@ -147,718 +560,1279 @@ button{cursor:pointer}
       <button class="modal-close" onclick="closeModal('privacyModal')">확인</button>
     </div>
   </div>
+
 </div>
 
 <script>
-/* 캐릭터 정보: 기존 이름과 성격 유지 */
-const characters={
- haru:{
-  name:"하루",role:"동갑내기 단짝 친구",color:"#0284c7",
-  bg:"linear-gradient(180deg,#e0f2fe,#f0f9ff)",
-  greeting:"야호! 왔구나! 오늘 하루 어땠어? 좋은 일이 있었어도 좋고, 고민이 있어도 좋아. 편하게 이야기해 봐!",
-  style:"casual",
-  smallTalk:{
-   hi:"안녕!! 반가워 ㅎㅎ 오늘은 어떻게 지냈어?",
-   thanks:"에이, 뭘! 이야기해 줘서 나도 고마워. 언제든 편하게 찾아와!",
-   bored:"심심했구나 ㅋㅋ 오늘은 뭐 하면서 보냈어?"
+/* ==========================================
+   1. 캐릭터 데이터
+========================================== */
+
+const characters = {
+  haru: {
+    name: "하루",
+    role: "동갑내기 단짝 친구",
+    color: "#0284c7",
+    bg: "linear-gradient(180deg,#e0f2fe,#f0f9ff)",
+    greeting: "야호! 왔구나! 오늘 하루 어땠어? 좋은 일이 있었어도 좋고, 고민이 있어도 좋아. 편하게 이야기해 봐!",
+    style: "casual",
+    smallTalk: {
+      hi: "안녕!! 반가워 ㅎㅎ 오늘은 어떻게 지냈어?",
+      thanks: "에이, 뭘! 이야기해 줘서 나도 고마워. 언제든 편하게 찾아와!",
+      bored: "심심했구나 ㅋㅋ 오늘은 뭐 하면서 보냈어?"
+    }
+  },
+
+  teacher: {
+    name: "선생님",
+    role: "다정한 상담 선생님",
+    color: "#16a34a",
+    bg: "linear-gradient(180deg,#dcfce7,#f0fdf4)",
+    greeting: "어서 와요. 오늘은 어떤 하루를 보냈나요? 가벼운 이야기부터 고민까지 편하게 들려주세요.",
+    style: "polite",
+    smallTalk: {
+      hi: "안녕하세요! 다시 만나 반가워요. 오늘 하루는 어떠셨나요?",
+      thanks: "고맙다고 이야기해 줘서 고마워요. 언제든 편하게 이야기해 주세요.",
+      bored: "잠시 쉬어가고 싶었군요. 요즘 가장 관심 있는 일이 있나요?"
+    }
+  },
+
+  bambi: {
+    name: "밤비",
+    role: "말랑한 아기 강아지",
+    color: "#ea580c",
+    bg: "linear-gradient(180deg,#ffedd5,#fff7ed)",
+    greeting: "멍멍! 밤비야! 꼬리 흔들면서 기다리고 있었어! 오늘 무슨 일이 있었는지 들려줘! 🐾",
+    style: "dog",
+    smallTalk: {
+      hi: "멍! 안녕안녕! 오늘도 만나서 좋아! 오늘 기분은 어때?",
+      thanks: "헤헤! 밤비도 고마워! 멍멍!",
+      bored: "심심했어? 밤비랑 같이 수다 떨자! 오늘 뭐 했어?"
+    }
+  },
+
+  luna: {
+    name: "루나",
+    role: "차분한 달빛 고양이",
+    color: "#9333ea",
+    bg: "linear-gradient(180deg,#f3e8ff,#faf5ff)",
+    greeting: "안녕, 난 루나야. 오늘은 어떤 생각을 하고 있었어? 천천히 이야기해도 괜찮아냥.",
+    style: "cat",
+    smallTalk: {
+      hi: "안녕, 반가워냥. 오늘 하루는 평온했어?",
+      thanks: "고맙긴. 네 이야기를 들을 수 있어서 나도 좋아.",
+      bored: "심심할 땐 천천히 이야기 나누는 것도 좋지. 무슨 생각 중이었어?"
+    }
   }
- },
- teacher:{
-  name:"선생님",role:"다정한 상담 선생님",color:"#16a34a",
-  bg:"linear-gradient(180deg,#dcfce7,#f0fdf4)",
-  greeting:"어서 와요. 오늘은 어떤 하루를 보냈나요? 가벼운 이야기부터 고민까지 편하게 들려주세요.",
-  style:"polite",
-  smallTalk:{
-   hi:"안녕하세요! 다시 만나 반가워요. 오늘 하루는 어떠셨나요?",
-   thanks:"고맙다고 이야기해 줘서 고마워요. 언제든 편하게 이야기해 주세요.",
-   bored:"잠시 쉬어가고 싶었군요. 요즘 가장 관심 있는 일이 있나요?"
-  }
- },
- bambi:{
-  name:"밤비",role:"말랑한 아기 강아지",color:"#ea580c",
-  bg:"linear-gradient(180deg,#ffedd5,#fff7ed)",
-  greeting:"멍멍! 밤비야! 꼬리 흔들면서 기다리고 있었어! 오늘 무슨 일이 있었는지 들려줘! 🐾",
-  style:"dog",
-  smallTalk:{
-   hi:"멍! 안녕안녕! 오늘도 만나서 좋아! 오늘 기분은 어때?",
-   thanks:"헤헤! 밤비도 고마워! 멍멍!",
-   bored:"심심했어? 밤비랑 같이 수다 떨자! 오늘 뭐 했어?"
-  }
- },
- luna:{
-  name:"루나",role:"차분한 달빛 고양이",color:"#9333ea",
-  bg:"linear-gradient(180deg,#f3e8ff,#faf5ff)",
-  greeting:"안녕, 난 루나야. 오늘은 어떤 생각을 하고 있었어? 천천히 이야기해도 괜찮아냥.",
-  style:"cat",
-  smallTalk:{
-   hi:"안녕, 반가워냥. 오늘 하루는 평온했어?",
-   thanks:"고맙긴. 네 이야기를 들을 수 있어서 나도 좋아.",
-   bored:"심심할 땐 천천히 이야기 나누는 것도 좋지. 무슨 생각 중이었어?"
-  }
- }
 };
 
-let currentChar=null,currentCharKey=null,isTyping=false;
-let chatHistories=loadData("maeumon_chats",{});
-let moodHistories=loadData("maeumon_moods",{});
+let currentChar = null;
+let currentCharKey = null;
+let isTyping = false;
+let chatHistories = loadData("maeumon_chats", {});
+let moodHistories = loadData("maeumon_moods", {});
+let lastTopic = null;
 
-function loadData(key,fallback){
- try{return JSON.parse(localStorage.getItem(key))||fallback}catch(e){return fallback}
-}
-function saveData(key,data){
- try{localStorage.setItem(key,JSON.stringify(data))}
- catch(e){alert("저장 공간이 부족하거나 브라우저에서 저장이 제한되었습니다.")}
-}
-function getHistory(){
- if(!chatHistories[currentCharKey])chatHistories[currentCharKey]=[];
- return chatHistories[currentCharKey];
-}
-function saveMessage(sender,message,tag=""){
- getHistory().push({sender,message,tag,time:new Date().toISOString()});
- saveData("maeumon_chats",chatHistories);
-}
-function todayKey(){
- const d=new Date();
- return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
-}
-function recordMood(emoji,mood,button){
- moodHistories[todayKey()]={emoji,mood,character:currentCharKey,time:new Date().toISOString()};
- saveData("maeumon_moods",moodHistories);
- document.querySelectorAll(".mood-btn").forEach(b=>b.classList.remove("selected"));
- button.classList.add("selected");
- appendSystemMessage("오늘의 기분을 '"+mood+"'으로 기록했어. 이야기해 줘서 고마워!");
-}
-function restoreMood(){
- const mood=moodHistories[todayKey()];
- if(!mood)return;
- document.querySelectorAll(".mood-btn").forEach(btn=>{
-  btn.classList.toggle("selected",btn.textContent.includes(mood.mood));
- });
-}
+/* ==========================================
+   2. 저장 시스템
+========================================== */
 
-/* =====================================
-   새롭게 만든 3D 캐릭터 모델
-   하루: 어린 사람 캐릭터
-   선생님: 안경을 쓴 어른 캐릭터
-   밤비: 복슬복슬한 강아지
-   루나: 복슬복슬한 고양이
-===================================== */
-
-function createMaterial(color,roughness=.72){
- return new THREE.MeshStandardMaterial({
-  color,roughness,metalness:0
- });
-}
-function addSphere(parent,color,position,scale,roughness=.78){
- const mesh=new THREE.Mesh(
-  new THREE.SphereGeometry(1,40,32),
-  createMaterial(color,roughness)
- );
- mesh.position.set(...position);
- mesh.scale.set(...scale);
- parent.add(mesh);
- return mesh;
-}
-function addGroup(parent,position=[0,0,0]){
- const group=new THREE.Group();
- group.position.set(...position);
- parent.add(group);
- return group;
-}
-function addEye(parent,x,y,z,iris=0x49332b){
- addSphere(parent,0xffffff,[x,y,z],[.145,.18,.075],.28);
- addSphere(parent,iris,[x,y,z+.065],[.092,.12,.045],.25);
- addSphere(parent,0x111111,[x,y,z+.095],[.058,.085,.025],.2);
- addSphere(parent,0xffffff,[x-.025,y+.045,z+.12],[.032,.035,.015],.15);
- addSphere(parent,0xffffff,[x+.035,y-.035,z+.12],[.014,.016,.01],.15);
-}
-function addSmile(parent,x,y,z,color=0x9d4c4c){
- const curve=new THREE.QuadraticBezierCurve3(
-  new THREE.Vector3(x-.09,y,z),
-  new THREE.Vector3(x,y-.09,z+.015),
-  new THREE.Vector3(x+.09,y,z)
- );
- const mesh=new THREE.Mesh(
-  new THREE.TubeGeometry(curve,16,.012,8,false),
-  createMaterial(color,.6)
- );
- parent.add(mesh);
-}
-function addHairCap(head,color,style="short"){
- const hair=addSphere(head,color,[0,.17,-.035],[.86,.56,.83]);
- if(style==="short"){
-  addSphere(head,color,[-.48,.12,.05],[.32,.35,.52]);
-  addSphere(head,color,[.45,.13,.05],[.32,.35,.52]);
-  addSphere(head,color,[0,.42,.18],[.48,.22,.42]);
- }else{
-  addSphere(head,color,[-.55,-.16,-.04],[.25,.66,.35]);
-  addSphere(head,color,[.55,-.16,-.04],[.25,.66,.35]);
-  addSphere(head,color,[0,.42,.1],[.5,.22,.38]);
- }
- return hair;
-}
-function addGlasses(head){
- const frame=createMaterial(0x777b80,.35);
- [-1,1].forEach(side=>{
-  const ring=new THREE.Mesh(
-   new THREE.TorusGeometry(.205,.025,12,40),
-   frame
-  );
-  ring.position.set(side*.27,.02,.75);
-  head.add(ring);
-  const arm=new THREE.Mesh(
-   new THREE.CylinderGeometry(.018,.018,.32,12),
-   frame
-  );
-  arm.rotation.z=Math.PI/2;
-  arm.position.set(side*.57,.02,.53);
-  head.add(arm);
- });
- const bridge=new THREE.Mesh(
-  new THREE.CylinderGeometry(.018,.018,.13,12),
-  frame
- );
- bridge.rotation.z=Math.PI/2;
- bridge.position.set(0,.02,.75);
- head.add(bridge);
-}
-function addHuman(type){
- const group=new THREE.Group();
- const teacher=type==="teacher";
- const skin=teacher?0xf1b99e:0xffd1b5;
- const hairColor=teacher?0xb8b7b4:0x49312c;
- const shirtColor=teacher?0x9ccbdc:0x78bce9;
-
- // 몸과 목
- addSphere(group,shirtColor,[0,-1.03,0],[.76,.76,.52]);
- addSphere(group,skin,[0,-.42,.03],[.22,.4,.23]);
-
- const head=addGroup(group,[0,.12,.05]);
- addSphere(head,skin,[0,0,0],[.79,.9,.68]);
-
- if(teacher){
-  // 어른 캐릭터의 옆머리와 은회색 가르마
-  addHairCap(head,hairColor,"long");
-  addSphere(head,hairColor,[0,.48,-.02],[.72,.23,.55]);
-  addSphere(head,hairColor,[-.54,.22,-.02],[.22,.38,.3]);
-  addSphere(head,hairColor,[.54,.22,-.02],[.22,.38,.3]);
- }else{
-  // 세 번째 사진처럼 둥근 얼굴과 부드러운 앞머리
-  addHairCap(head,hairColor,"short");
-  addSphere(head,hairColor,[-.35,.32,.47],[.32,.22,.22]);
-  addSphere(head,hairColor,[0,.38,.5],[.32,.23,.22]);
-  addSphere(head,hairColor,[.35,.32,.47],[.32,.22,.22]);
- }
-
- // 귀
- [-1,1].forEach(s=>{
-  addSphere(head,skin,[s*.77,-.03,0],[.19,.25,.13]);
-  addSphere(head,0xe9a99d,[s*.79,-.04,.105],[.09,.14,.025]);
- });
-
- // 눈썹
- [-1,1].forEach(s=>{
-  const brow=addSphere(head,teacher?0xaaa6a0:0x49312c,[s*.29,.22,.61],[.17,.035,.035]);
-  brow.rotation.z=s*-.08;
- });
-
- addEye(head,-.29,.02,.63,teacher?0x59392c:0x493329);
- addEye(head,.29,.02,.63,teacher?0x59392c:0x493329);
-
- // 코와 볼
- addSphere(head,skin,[0,-.13,.68],[.09,.08,.07]);
- [-1,1].forEach(s=>{
-  addSphere(head,0xf29b9b,[s*.48,-.2,.57],[.14,.075,.025]);
- });
- addSmile(head,0,-.31,.65);
-
- if(teacher){
-  addGlasses(head);
-  // 셔츠 깃
-  const collar=addSphere(group,0xeaf5f8,[0,-.52,.48],[.25,.19,.08]);
-  collar.rotation.z=.08;
-  addSphere(group,0x638ba0,[0,-.76,.53],[.055,.12,.035]);
- }else{
-  // 귀여운 옷의 둥근 카라
-  addSphere(group,0xf4faff,[-.18,-.55,.44],[.2,.13,.07]);
-  addSphere(group,0xf4faff,[.18,-.55,.44],[.2,.13,.07]);
- }
-
- group.userData.head=head;
- return group;
-}
-function addDog(){
- const group=new THREE.Group();
- const fur=0xfff0d9,furLight=0xfff8ec,inner=0xe9a7a0;
-
- // 몸통과 둥근 머리
- addSphere(group,fur,[0,-1.02,0],[.66,.67,.53]);
- const head=addGroup(group,[0,.08,.04]);
- addSphere(head,furLight,[0,0,0],[.84,.83,.72]);
-
- // 풍성한 볼과 이마 털
- addSphere(head,furLight,[-.54,-.24,.27],[.3,.31,.3]);
- addSphere(head,furLight,[.54,-.24,.27],[.3,.31,.3]);
- addSphere(head,furLight,[0,.55,.08],[.45,.25,.4]);
-
- // 늘어진 강아지 귀
- [-1,1].forEach(s=>{
-  const ear=addSphere(head,fur,[s*.73,.14,-.02],[.28,.48,.22]);
-  ear.rotation.z=-s*.35;
-  const innerEar=addSphere(head,inner,[s*.77,.1,.16],[.16,.31,.035]);
-  innerEar.rotation.z=-s*.35;
- });
-
- addEye(head,-.29,.12,.64,0x5b3828);
- addEye(head,.29,.12,.64,0x5b3828);
-
- // 주둥이와 코
- addSphere(head,0xfff8ee,[0,-.22,.64],[.35,.25,.24]);
- addSphere(head,0xf28b91,[0,-.12,.86],[.105,.075,.06]);
- addSmile(head,0,-.33,.84,0x87534c);
-
- // 앞발
- [-1,1].forEach(s=>{
-  const paw=addSphere(group,furLight,[s*.43,-1.28,.48],[.23,.31,.22]);
-  paw.rotation.z=s*-.22;
- });
-
- // 꼬리
- const tail=addSphere(group,furLight,[.65,-1.15,-.35],[.23,.24,.23]);
- tail.rotation.z=-.5;
-
- // 털처럼 보이는 작은 둥근 장식
- for(let i=0;i<9;i++){
-  const a=i*Math.PI*2/9;
-  addSphere(head,furLight,[Math.cos(a)*.67,Math.sin(a)*.56,.12],[.13,.14,.12]);
- }
-
- group.userData.head=head;
- group.userData.tail=tail;
- return group;
-}
-function addCat(){
- const group=new THREE.Group();
- const fur=0xfff4eb,furShade=0xe7d9d4,inner=0xeaa6ad;
-
- addSphere(group,fur,[0,-1.03,0],[.65,.67,.52]);
- const head=addGroup(group,[0,.08,.04]);
- addSphere(head,fur,[0,0,0],[.82,.81,.7]);
-
- // 삼각형 고양이 귀
- [-1,1].forEach(s=>{
-  const ear=new THREE.Mesh(
-   new THREE.ConeGeometry(.31,.72,4),
-   createMaterial(fur)
-  );
-  ear.position.set(s*.55,.66,-.01);
-  ear.rotation.z=-s*.18;
-  head.add(ear);
-
-  const innerEar=new THREE.Mesh(
-   new THREE.ConeGeometry(.19,.49,4),
-   createMaterial(inner)
-  );
-  innerEar.position.set(s*.55,.66,.15);
-  innerEar.rotation.z=-s*.18;
-  head.add(innerEar);
- });
-
- // 둥근 볼과 털
- addSphere(head,fur,[-.55,-.28,.23],[.32,.3,.3]);
- addSphere(head,fur,[.55,-.28,.23],[.32,.3,.3]);
-
- addEye(head,-.29,.12,.63,0x60452f);
- addEye(head,.29,.12,.63,0x60452f);
-
- // 고양이 코와 입
- addSphere(head,0xe98c9c,[0,-.16,.79],[.075,.06,.045]);
- addSmile(head,-.04,-.25,.78,0x9d6565);
- addSmile(head,.04,-.25,.78,0x9d6565);
-
- // 수염
- [-1,1].forEach(s=>{
-  for(let i=0;i<3;i++){
-   const line=new THREE.Mesh(
-    new THREE.CylinderGeometry(.008,.008,.32,8),
-    createMaterial(0xc1aaa0)
-   );
-   line.position.set(s*.59,-.21-i*.07,.55);
-   line.rotation.z=s*(Math.PI/2-.15);
-   head.add(line);
+function loadData(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key)) || fallback;
+  } catch(e) {
+    return fallback;
   }
- });
-
- // 앞발과 꼬리
- [-1,1].forEach(s=>{
-  addSphere(group,fur,[s*.42,-1.29,.48],[.23,.29,.2]);
- });
- const tail=addSphere(group,furShade,[.62,-1.15,-.35],[.2,.43,.2]);
- tail.rotation.z=-.55;
-
- group.userData.head=head;
- group.userData.tail=tail;
- return group;
-}
-function buildCharacter(type){
- if(type==="haru"||type==="teacher")return addHuman(type);
- if(type==="bambi")return addDog();
- return addCat();
 }
 
-/* 3D 렌더링 */
-let previewRenderers=[];
-let mainRenderer=null,mainScene=null,mainCamera=null,activeMesh=null;
-let animFrameId=null,targetRotY=0,dragging=false,lastX=0,thinking=false;
-
-function configureRenderer(renderer){
- renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
- renderer.outputEncoding=THREE.sRGBEncoding;
- renderer.toneMapping=THREE.ACESFilmicToneMapping;
- renderer.toneMappingExposure=1.15;
-}
-function addLighting(scene){
- scene.add(new THREE.AmbientLight(0xffffff,1.05));
- const key=new THREE.DirectionalLight(0xffffff,1.3);
- key.position.set(3,5,6);
- scene.add(key);
- const fill=new THREE.DirectionalLight(0xffd9d0,.55);
- fill.position.set(-4,2,3);
- scene.add(fill);
- const rim=new THREE.DirectionalLight(0xffffff,.7);
- rim.position.set(0,3,-4);
- scene.add(rim);
-}
-function setupPreview(){
- ["haru","teacher","bambi","luna"].forEach(type=>{
-  const container=document.getElementById("preview-"+type);
-  const scene=new THREE.Scene();
-  const camera=new THREE.PerspectiveCamera(38,1,.1,100);
-  camera.position.set(0,-.12,4.5);
-  const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true});
-  configureRenderer(renderer);
-  renderer.setSize(120,120);
-  container.appendChild(renderer.domElement);
-  addLighting(scene);
-  const mesh=buildCharacter(type);
-  mesh.position.y=-.12;
-  scene.add(mesh);
-  previewRenderers.push({scene,camera,renderer,mesh,type});
- });
- animatePreviews();
-}
-function animatePreviews(){
- requestAnimationFrame(animatePreviews);
- const t=Date.now()*.001;
- previewRenderers.forEach(item=>{
-  item.mesh.rotation.y=Math.sin(t*1.1)*.12;
-  item.mesh.position.y=-.12+Math.sin(t*1.8)*.025;
-  if(item.mesh.userData.tail){
-   item.mesh.userData.tail.rotation.z=Math.sin(t*3)*.2;
+function saveData(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch(e) {
+    alert("브라우저 저장 공간이 부족합니다.");
   }
-  item.renderer.render(item.scene,item.camera);
- });
 }
-function initStage(){
- if(animFrameId)cancelAnimationFrame(animFrameId);
- const container=document.getElementById("threeCanvasContainer");
- container.innerHTML="";
- const width=container.clientWidth||400;
- const height=container.clientHeight||195;
- mainScene=new THREE.Scene();
- mainCamera=new THREE.PerspectiveCamera(38,width/height,.1,100);
- mainCamera.position.set(0,-.25,4.5);
- mainRenderer=new THREE.WebGLRenderer({alpha:true,antialias:true});
- configureRenderer(mainRenderer);
- mainRenderer.setSize(width,height);
- container.appendChild(mainRenderer.domElement);
- addLighting(mainScene);
- activeMesh=buildCharacter(currentCharKey);
- activeMesh.position.y=-.22;
- mainScene.add(activeMesh);
 
- const wrapper=document.getElementById("stageWrapper");
- wrapper.onpointerdown=e=>{
-  dragging=true;lastX=e.clientX;
-  wrapper.setPointerCapture?.(e.pointerId);
- };
- wrapper.onpointermove=e=>{
-  if(!dragging)return;
-  targetRotY+=(e.clientX-lastX)*.012;
-  lastX=e.clientX;
- };
- wrapper.onpointerup=()=>dragging=false;
- wrapper.onpointercancel=()=>dragging=false;
-
- function animate(){
-  animFrameId=requestAnimationFrame(animate);
-  if(!activeMesh)return;
-  const t=Date.now()*.003;
-  activeMesh.rotation.y+=(targetRotY-activeMesh.rotation.y)*.08;
-  if(activeMesh.userData.head){
-   activeMesh.userData.head.rotation.x+=( (thinking?-.12:0)-activeMesh.userData.head.rotation.x)*.06;
+function getHistory() {
+  if (!chatHistories[currentCharKey]) {
+    chatHistories[currentCharKey] = [];
   }
-  activeMesh.position.y=-.22+(thinking?Math.abs(Math.sin(t*2.5))*.09:Math.sin(t)*.035);
-  if(activeMesh.userData.tail){
-   activeMesh.userData.tail.rotation.z=Math.sin(t*3)*.22;
-  }
-  mainRenderer.render(mainScene,mainCamera);
- }
- animate();
+  return chatHistories[currentCharKey];
 }
 
-/* 캐릭터 선택 및 대화 복원 */
-function selectCharacter(key){
- currentCharKey=key;
- currentChar=characters[key];
- document.getElementById("selectScreen").style.display="none";
- document.getElementById("chatScreen").style.display="flex";
- document.getElementById("headerName").textContent=currentChar.name;
- document.getElementById("headerRole").textContent=currentChar.role;
- document.getElementById("topBar").style.background=currentChar.color;
- document.getElementById("sendBtn").style.background=currentChar.color;
- document.getElementById("stageWrapper").style.background=currentChar.bg;
- targetRotY=0;
- setTimeout(initStage,50);
- restoreChat();
- restoreMood();
+function saveMessage(sender, message, tag = "") {
+  getHistory().push({
+    sender,
+    message,
+    tag,
+    time: new Date().toISOString()
+  });
+
+  saveData("maeumon_chats", chatHistories);
 }
-function restoreChat(){
- const chatBox=document.getElementById("chatBox");
- chatBox.innerHTML="";
- const history=getHistory();
- if(history.length===0){
-  showReply(currentChar.greeting,"첫 인사",false);
-  return;
- }
- history.forEach(item=>{
-  if(item.sender==="user")appendUserMessage(item.message,false);
-  else if(item.sender==="bot")appendBotMessage(item.message,item.tag,false,false);
-  else if(item.sender==="system")appendSystemMessage(item.message,false);
- });
+
+/* ==========================================
+   3. 기분 기록
+========================================== */
+
+function todayKey() {
+  const d = new Date();
+  return d.getFullYear() + "-" +
+    (d.getMonth()+1) + "-" + d.getDate();
 }
-const topics={
- study:{
-  words:["시험","성적","공부","진로","대학","모의고사","숙제","학원","점수"],
-  replies:["시험이나 공부 때문에 마음이 복잡하구나. 어떤 부분이 가장 걱정돼?","잘하고 싶은 마음이 클수록 부담도 커질 수 있어. 지금 가장 신경 쓰이는 건 뭐야?","공부와 진로는 생각할수록 고민이 많아지지. 어떤 일이 있었는지 이야기해 줄래?"],
-  follow:"아까 공부 이야기를 했었지. 그중에서도 가장 신경 쓰이는 부분이 뭐야?"
- },
- friend:{
-  words:["친구","따돌림","단톡","싸웠","외톨이","관계","손절","왕따","서운"],
-  replies:["친구 관계에서 마음이 상했구나. 무슨 일이 있었는지 천천히 이야기해 줄래?","가까운 사람에게 서운한 일이 생기면 생각보다 오래 마음에 남지. 어떤 점이 가장 속상했어?","그 상황에서 네 기분이 어땠는지 궁금해. 조금 더 들려줄래?"],
-  follow:"아까 친구 이야기를 했었는데, 그 일은 어떻게 되었어?"
- },
- family:{
-  words:["부모님","엄마","아빠","가족","잔소리","동생","언니","오빠"],
-  replies:["가족과의 일은 가까운 사이인 만큼 더 복잡하게 느껴질 수 있어. 무슨 일이 있었어?","집에서도 마음이 편하지 않았다면 답답했겠다. 어떤 상황이었는지 이야기해 줄래?"],
-  follow:"아까 가족 이야기를 했었지. 지금은 마음이 조금 괜찮아졌어?"
- },
- tired:{
-  words:["피곤","졸려","지쳐","힘들","우울","스트레스","짜증","불안","외로워"],
-  replies:["요즘 마음이 많이 지쳐 있는 것 같아. 특별히 힘든 일이 있었어?","그런 기분이 드는구나. 지금은 위로가 필요한지, 함께 해결 방법을 찾아보고 싶은지 궁금해.","혼자 생각하다 보면 더 복잡해질 수 있지. 천천히 이야기해도 괜찮아."],
-  follow:"아까 힘들다고 했는데, 지금은 기분이 조금 달라졌어?"
- }
-};
-let lastTopic=null;
-function choose(list){return list[Math.floor(Math.random()*list.length)]}
-function getResponse(text){
- const clean=text.trim();
- const lower=clean.toLowerCase();
- const dangerWords=["죽고 싶","자살하고 싶","살기 싫","자해하고 싶","사라지고 싶","나를 해치고 싶"];
- if(dangerWords.some(word=>lower.includes(word))){
-  lastTopic="safety";
-  return {tag:"안전 지원 안내",danger:true,reply:"이야기해 줘서 고마워. 지금 혼자 감당하기 어려울 만큼 힘든 상황인 것 같아. 네 안전이 가장 중요해. 지금 바로 믿을 수 있는 보호자나 선생님에게 알려 줘. 가능하면 혼자 있지 말고 가까운 어른과 함께 있어 줘. 당장 위험하다면 112 또는 119에 연락하고, 청소년상담1388에서도 도움을 받을 수 있어."};
- }
- if(/^(안녕|안녕하세요|안뇽|하이|헬로|반가워|좋은 아침)[!?.~ ]*$/i.test(clean))
-  return {tag:"일상 인사",reply:currentChar.smallTalk.hi};
- if(/^(고마워|감사해|감사합니다|땡큐)[!?.~ ]*$/i.test(clean))
-  return {tag:"감사 인사",reply:currentChar.smallTalk.thanks};
- if(/^(오늘 어땠어|뭐해|잘 지냈어|잘 있었어)[?!. ]*$/.test(clean)){
-  const answers={
-   haru:"나? 오늘은 네가 올까 기다리고 있었지 ㅋㅋ 너는 오늘 어땠어?",
-   teacher:"저는 잘 지냈어요. 찾아와 줘서 반가워요. 오늘은 어떤 하루였나요?",
-   bambi:"멍! 밤비는 오늘도 신나게 기다리고 있었어! 너는 오늘 뭐 했어?",
-   luna:"나는 조용히 시간을 보내고 있었어. 너는 오늘 어떤 하루였어냥?"
+
+function recordMood(emoji, mood, button) {
+  const key = todayKey();
+
+  moodHistories[key] = {
+    emoji,
+    mood,
+    character: currentCharKey,
+    time: new Date().toISOString()
   };
-  return {tag:"일상 대화",reply:answers[currentCharKey]};
- }
- if(/심심|놀자|지루해|할 게 없/.test(clean))
-  return {tag:"일상 대화",reply:currentChar.smallTalk.bored};
- if(lastTopic&&/^(응|어|맞아|그래|그런데|근데|그래서|왜|몰라|그게)[.!? ]*$/.test(clean)){
-  return {tag:"이전 대화 연결",reply:topics[lastTopic]?.follow||"응, 계속 이야기해 줘. 천천히 들어볼게."};
- }
- for(const [type,data] of Object.entries(topics)){
-  if(data.words.some(word=>clean.includes(word))){
-   lastTopic=type;
-   return {tag:"고민 공감",reply:choose(data.replies)};
-  }
- }
- if(/좋아|행복|기뻐|신나|즐거워/.test(clean))
-  return {tag:"감정 공감",reply:"오, 좋은 일이 있었나 보다! 무슨 일이 있었는지 더 들려줘!"};
- if(/싫어|화나|짜증나|속상/.test(clean))
-  return {tag:"감정 공감",reply:"마음이 불편했겠구나. 어떤 일 때문에 그런 기분이 들었어?"};
- return {tag:"대화 이어가기",reply:choose(["그랬구나. 그 이야기를 조금 더 들려줄래?","네가 그렇게 생각한 이유가 궁금해. 어떤 일이 있었어?","음, 그렇구나. 그때 어떤 기분이 들었어?","이야기해 줘서 고마워. 조금 더 자세히 말해 줘도 좋아."])};
-}
-function applyStyle(message){
- if(currentChar.style==="dog"&&!message.includes("멍"))return message+" 🐾";
- if(currentChar.style==="cat"&&!message.includes("냥"))return message+"냥.";
- return message;
+
+  saveData("maeumon_moods", moodHistories);
+
+  document.querySelectorAll(".mood-btn").forEach(btn => {
+    btn.classList.remove("selected");
+  });
+
+  button.classList.add("selected");
+
+  appendSystemMessage(
+    "오늘의 기분을 '" + mood + "'으로 기록했어. 이야기해 줘서 고마워!"
+  );
 }
 
-/* 메시지 표시 */
-function appendUserMessage(text,save=true){
- const box=document.getElementById("chatBox");
- const row=document.createElement("div");
- row.className="msg-row user-row";
- const bubble=document.createElement("div");
- bubble.className="bubble user-bubble";
- bubble.style.background=currentChar.color;
- bubble.textContent=text;
- row.appendChild(bubble);
- box.appendChild(row);
- if(save)saveMessage("user",text);
- box.scrollTop=box.scrollHeight;
+function restoreMood() {
+  const mood = moodHistories[todayKey()];
+  if (!mood) return;
+
+  document.querySelectorAll(".mood-btn").forEach(btn => {
+    btn.classList.toggle(
+      "selected",
+      btn.textContent.includes(mood.mood)
+    );
+  });
 }
-function appendBotMessage(text,tag,danger=false,save=true){
- const box=document.getElementById("chatBox");
- const row=document.createElement("div");
- row.className="msg-row bot-row";
- const label=document.createElement("span");
- label.className="sender-label";
- label.textContent=currentChar.name;
- const bubble=document.createElement("div");
- bubble.className="bubble bot-bubble"+(danger?" danger-bubble":"");
- const tagElement=document.createElement("span");
- tagElement.className="tag";
- tagElement.textContent=tag;
- const content=document.createElement("div");
- content.textContent=text;
- bubble.append(tagElement,document.createElement("br"),content);
- row.append(label,bubble);
- box.appendChild(row);
- if(save)saveMessage("bot",text,tag);
- box.scrollTop=box.scrollHeight;
+
+/* ==========================================
+   4. 3D 캐릭터 제작
+========================================== */
+
+function buildCharacter(type) {
+  const group = new THREE.Group();
+
+  const material = (color, roughness = 0.78) =>
+    new THREE.MeshStandardMaterial({
+      color,
+      roughness,
+      metalness: 0
+    });
+
+  function ball(parent, color, scale, pos, mat = null) {
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(1, 40, 32),
+      mat || material(color)
+    );
+
+    mesh.scale.set(...scale);
+    mesh.position.set(...pos);
+    mesh.castShadow = true;
+    parent.add(mesh);
+    return mesh;
+  }
+
+  function eye(parent, x, y, z, size, color = 0x2b1b18) {
+    ball(parent, 0xffffff,
+      [size*1.18,size*1.35,0.075],
+      [x,y,z]
+    );
+
+    ball(parent, color,
+      [size*.83,size,0.065],
+      [x,y-.01,z+.06]
+    );
+
+    ball(parent, 0x100b0a,
+      [size*.48,size*.67,.035],
+      [x,y-.015,z+.11]
+    );
+
+    ball(parent, 0xffffff,
+      [.045,.045,.025],
+      [x-.04,y+.055,z+.14],
+      new THREE.MeshBasicMaterial({color:0xffffff})
+    );
+  }
+
+  function eyes(parent, size, spacing, y, z, color) {
+    [-1,1].forEach(side => {
+      eye(parent, side*spacing, y, z, size, color);
+
+      // 눈썹
+      const brow = ball(parent, 0x553b32,
+        [.13,.025,.025],
+        [side*spacing,y+size*1.6,z-.015]
+      );
+      brow.rotation.z = side*.12;
+    });
+  }
+
+  function cheeks(parent, y, z) {
+    [-1,1].forEach(side => {
+      ball(parent, 0xff9d9d,
+        [.15,.075,.025],
+        [side*.49,y,z],
+        new THREE.MeshBasicMaterial({
+          color:0xff9d9d,
+          transparent:true,
+          opacity:.42
+        })
+      );
+    });
+  }
+
+  function mouth(parent, y, z, size = .09) {
+    const mesh = new THREE.Mesh(
+      new THREE.TorusGeometry(size,.018,12,24,Math.PI),
+      material(0x9b5550)
+    );
+    mesh.position.set(0,y,z);
+    mesh.rotation.z = Math.PI;
+    parent.add(mesh);
+  }
+
+  /* 머리카락 */
+
+  function hairCap(parent, color, style) {
+    const hairMat = material(color,.9);
+
+    const cap = new THREE.Mesh(
+      new THREE.SphereGeometry(
+        .83,48,32,0,Math.PI*2,0,Math.PI*.58
+      ),
+      hairMat
+    );
+
+    cap.scale.set(1.04,1.05,1.02);
+    cap.position.y = .08;
+    parent.add(cap);
+
+    if(style === "human") {
+      // 자연스러운 앞머리
+      for(let i=-2;i<=2;i++) {
+        const fringe = ball(
+          parent,color,
+          [.2,.16,.13],
+          [i*.16,.49-Math.abs(i)*.025,.63],
+          hairMat
+        );
+        fringe.rotation.z = -i*.1;
+      }
+
+      [-1,1].forEach(side => {
+        ball(parent,color,
+          [.17,.33,.15],
+          [side*.69,.05,.08],
+          hairMat
+        );
+      });
+    }
+
+    if(style === "teacher") {
+      // 선생님 헤어 볼륨
+      [-1,1].forEach(side => {
+        ball(parent,color,
+          [.23,.29,.19],
+          [side*.61,.18,.02],
+          hairMat
+        );
+      });
+
+      for(let i=-2;i<=2;i++) {
+        ball(parent,color,
+          [.2,.13,.13],
+          [i*.16,.59-Math.abs(i)*.025,.55],
+          hairMat
+        );
+      }
+    }
+  }
+
+  /* 사람 캐릭터 */
+
+  function createHuman(teacher) {
+    const human = new THREE.Group();
+
+    const skin = material(0xffc6a7);
+    const hairColor = teacher ? 0xb8b6b4 : 0x30201c;
+    const clothes = material(teacher ? 0x9fc8d8 : 0x5e9cc7);
+
+    // 몸통
+    ball(human,0xffffff,
+      [.63,.73,.43],
+      [0,-1.13,0],
+      clothes
+    );
+
+    // 목
+    ball(human,0xffffff,
+      [.19,.27,.19],
+      [0,-.46,0],
+      skin
+    );
+
+    const head = new THREE.Group();
+    head.position.y = .18;
+    human.add(head);
+
+    // 얼굴
+    ball(head,0xffffff,
+      [.79,.84,.68],
+      [0,0,0],
+      skin
+    );
+
+    // 귀
+    [-1,1].forEach(side => {
+      ball(head,0xffffff,
+        [.17,.24,.12],
+        [side*.76,-.04,0],
+        skin
+      );
+
+      ball(head,0xf19a91,
+        [.09,.14,.025],
+        [side*.78,-.04,.11]
+      );
+    });
+
+    hairCap(head,hairColor,teacher?"teacher":"human");
+
+    eyes(head,.15,.29,-.02,.66,0x35221d);
+    cheeks(head,-.23,.68);
+    mouth(head,-.29,.74);
+
+    // 선생님 안경
+    if(teacher) {
+      [-1,1].forEach(side => {
+        const frame = new THREE.Mesh(
+          new THREE.TorusGeometry(.22,.025,12,36),
+          material(0x89847e,.35)
+        );
+        frame.scale.set(1.1,1.12,1);
+        frame.position.set(side*.29,-.02,.83);
+        head.add(frame);
+      });
+
+      const bridge = new THREE.Mesh(
+        new THREE.BoxGeometry(.15,.025,.025),
+        material(0x89847e,.35)
+      );
+      bridge.position.set(0,-.02,.84);
+      head.add(bridge);
+    }
+
+    // 옷깃
+    [-1,1].forEach(side => {
+      const collar = new THREE.Mesh(
+        new THREE.BoxGeometry(.23,.22,.07),
+        material(0xf5f1e9)
+      );
+      collar.position.set(side*.16,-.67,.37);
+      collar.rotation.z = side*-.35;
+      human.add(collar);
+    });
+
+    human.userData.head = head;
+    return human;
+  }
+
+  /* 밤비 - 아기 강아지 */
+
+  function createDog() {
+    const dog = new THREE.Group();
+
+    const fur = material(0xfff6eb,.96);
+    const pink = material(0xf2a0a1);
+
+    // 몸
+    ball(dog,0xffffff,
+      [.58,.68,.45],
+      [0,-1.12,0],
+      fur
+    );
+
+    // 꼬리
+    const tail = ball(dog,0xffffff,
+      [.19,.32,.18],
+      [-.53,-.88,-.02],
+      fur
+    );
+    tail.rotation.z = -.65;
+
+    // 얼굴
+    const head = new THREE.Group();
+    head.position.y = .2;
+    dog.add(head);
+
+    ball(head,0xffffff,
+      [.83,.82,.71],
+      [0,0,0],
+      fur
+    );
+
+    // 길고 둥근 강아지 귀
+    [-1,1].forEach(side => {
+      const ear = ball(head,0xffffff,
+        [.29,.55,.18],
+        [side*.72,.42,-.02],
+        fur
+      );
+      ear.rotation.z = side*-.22;
+
+      const inner = ball(head,0xffffff,
+        [.18,.39,.04],
+        [side*.72,.42,.13],
+        pink
+      );
+      inner.rotation.z = side*-.22;
+    });
+
+    // 주둥이
+    ball(head,0xffffff,
+      [.34,.23,.23],
+      [0,-.28,.64],
+      material(0xfffdf8)
+    );
+
+    // 코
+    ball(head,0xffffff,
+      [.095,.07,.06],
+      [0,-.19,.86],
+      material(0xf28d9c)
+    );
+
+    eyes(head,.19,.32,.04,.66,0x35241d);
+    cheeks(head,-.24,.68);
+    mouth(head,-.39,.82,.12);
+
+    // 앞발
+    [-1,1].forEach(side => {
+      ball(dog,0xffffff,
+        [.24,.33,.27],
+        [side*.35,-1.53,.25],
+        fur
+      );
+
+      ball(dog,0xffffff,
+        [.12,.13,.035],
+        [side*.35,-1.62,.49],
+        pink
+      );
+    });
+
+    // 보송한 털 느낌을 주는 작은 털 뭉치
+    for(let i=0;i<15;i++) {
+      const angle = (i/15)*Math.PI*2;
+      const x = Math.cos(angle)*.73;
+      const y = Math.sin(angle)*.55;
+
+      ball(head,0xffffff,
+        [.075,.11,.07],
+        [x,y,.02],
+        fur
+      );
+    }
+
+    dog.userData.head = head;
+    dog.userData.tail = tail;
+    return dog;
+  }
+
+  /* 루나 - 아기 고양이 */
+
+  function createCat() {
+    const cat = new THREE.Group();
+
+    const fur = material(0xe9dcf7,.96);
+    const pink = material(0xf19caf);
+
+    // 몸
+    ball(cat,0xffffff,
+      [.57,.66,.44],
+      [0,-1.1,0],
+      fur
+    );
+
+    // 꼬리
+    const tail = ball(cat,0xffffff,
+      [.16,.42,.16],
+      [.54,-.82,-.04],
+      fur
+    );
+    tail.rotation.z = -.65;
+
+    const head = new THREE.Group();
+    head.position.y = .2;
+    cat.add(head);
+
+    ball(head,0xffffff,
+      [.81,.79,.69],
+      [0,0,0],
+      fur
+    );
+
+    // 뾰족한 고양이 귀
+    [-1,1].forEach(side => {
+      const ear = new THREE.Mesh(
+        new THREE.ConeGeometry(.28,.61,32),
+        fur
+      );
+      ear.position.set(side*.55,.68,0);
+      ear.rotation.z = -side*.15;
+      head.add(ear);
+
+      const inner = new THREE.Mesh(
+        new THREE.ConeGeometry(.16,.39,32),
+        pink
+      );
+      inner.position.set(side*.55,.69,.17);
+      inner.rotation.z = -side*.15;
+      head.add(inner);
+    });
+
+    eyes(head,.18,.31,.04,.66,0x7960ad);
+    cheeks(head,-.22,.69);
+
+    // 고양이 주둥이와 코
+    ball(head,0xffffff,
+      [.25,.16,.15],
+      [0,-.27,.68],
+      material(0xfffaff)
+    );
+
+    ball(head,0xffffff,
+      [.07,.05,.04],
+      [0,-.2,.83],
+      pink
+    );
+
+    mouth(head,-.36,.82,.075);
+
+    // 수염
+    [-1,1].forEach(side => {
+      for(let i=0;i<2;i++) {
+        const whisker = new THREE.Mesh(
+          new THREE.BoxGeometry(.23,.009,.009),
+          material(0xb7aabe)
+        );
+        whisker.position.set(
+          side*.55,
+          -.26-i*.07,
+          .77
+        );
+        whisker.rotation.z = side*.1;
+        head.add(whisker);
+      }
+    });
+
+    // 발
+    [-1,1].forEach(side => {
+      ball(cat,0xffffff,
+        [.23,.3,.25],
+        [side*.34,-1.53,.22],
+        fur
+      );
+    });
+
+    // 이마 털
+    for(let i=-2;i<=2;i++) {
+      ball(head,0xffffff,
+        [.12,.13,.09],
+        [i*.13,.68-Math.abs(i)*.02,.1],
+        fur
+      );
+    }
+
+    cat.userData.head = head;
+    cat.userData.tail = tail;
+    return cat;
+  }
+
+  let character;
+
+  if(type==="haru") character = createHuman(false);
+  if(type==="teacher") character = createHuman(true);
+  if(type==="bambi") character = createDog();
+  if(type==="luna") character = createCat();
+
+  group.add(character);
+  group.userData.head = character.userData.head;
+  group.userData.tail = character.userData.tail;
+
+  return group;
 }
-function appendSystemMessage(text,save=true){
- const box=document.getElementById("chatBox");
- const row=document.createElement("div");
- row.style.textAlign="center";
- row.style.fontSize="11px";
- row.style.color="#64748b";
- row.style.padding="5px";
- row.textContent=text;
- box.appendChild(row);
- if(save)saveMessage("system",text);
- box.scrollTop=box.scrollHeight;
+
+/* ==========================================
+   5. 3D 렌더링
+========================================== */
+
+let previewRenderers = [];
+let mainRenderer = null;
+let mainScene = null;
+let mainCamera = null;
+let activeMesh = null;
+let animFrameId = null;
+let targetRotY = 0;
+let targetRotX = 0;
+let dragging = false;
+let lastX = 0;
+let thinking = false;
+
+function addLights(scene) {
+  scene.add(
+    new THREE.HemisphereLight(0xfff7ed,0xc7b8a8,1.4)
+  );
+
+  const mainLight = new THREE.DirectionalLight(0xffffff,2.0);
+  mainLight.position.set(3,5,6);
+  scene.add(mainLight);
+
+  const fillLight = new THREE.DirectionalLight(0xffdfc5,.8);
+  fillLight.position.set(-4,2,3);
+  scene.add(fillLight);
+
+  const backLight = new THREE.DirectionalLight(0xdce7ff,.7);
+  backLight.position.set(0,4,-4);
+  scene.add(backLight);
 }
-function showReply(text,tag,danger=false){appendBotMessage(text,tag,danger)}
-function showTypingAndReply(text,tag,danger=false){
- isTyping=true;
- thinking=true;
- const btn=document.getElementById("sendBtn");
- const status=document.getElementById("statusPill");
- const box=document.getElementById("chatBox");
- btn.disabled=true;
- status.textContent=currentChar.name+"가 답장 작성 중...";
- const row=document.createElement("div");
- row.className="msg-row bot-row";
- row.id="typingIndicator";
- const label=document.createElement("span");
- label.className="sender-label";
- label.textContent=currentChar.name;
- const bubble=document.createElement("div");
- bubble.className="bubble bot-bubble typing-dots";
- for(let i=0;i<3;i++){
-  const dot=document.createElement("div");
-  dot.className="dot";
-  bubble.appendChild(dot);
- }
- row.append(label,bubble);
- box.appendChild(row);
- box.scrollTop=box.scrollHeight;
- const delay=Math.min(1400,Math.max(500,text.length*10));
- setTimeout(()=>{
-  row.remove();
-  thinking=false;
-  status.textContent="● 이야기 듣는 중";
+
+function setupPreview() {
+  ["haru","teacher","bambi","luna"].forEach(type => {
+    const container = document.getElementById("preview-"+type);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(35,1,.1,100);
+    camera.position.set(0,-.1,4.5);
+
+    const renderer = new THREE.WebGLRenderer({
+      alpha:true,
+      antialias:true
+    });
+
+    renderer.setSize(container.clientWidth,container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.setClearColor(0x000000,0);
+
+    container.appendChild(renderer.domElement);
+    addLights(scene);
+
+    const mesh = buildCharacter(type);
+    mesh.scale.setScalar(.61);
+    mesh.position.y = -.15;
+    scene.add(mesh);
+
+    previewRenderers.push({
+      scene,camera,renderer,mesh,type
+    });
+  });
+
+  animatePreviews();
+}
+
+function animatePreviews() {
+  requestAnimationFrame(animatePreviews);
+
+  previewRenderers.forEach(item => {
+    const t = Date.now()*.001;
+
+    item.mesh.rotation.y = Math.sin(t*1.2)*.13;
+    item.mesh.position.y = -.15+Math.sin(t*1.7)*.025;
+
+    if(item.mesh.userData.tail) {
+      item.mesh.userData.tail.rotation.z =
+        Math.sin(t*2)*.12-.5;
+    }
+
+    item.renderer.render(item.scene,item.camera);
+  });
+}
+
+function initStage() {
+  if(animFrameId) cancelAnimationFrame(animFrameId);
+
+  const container = document.getElementById("threeCanvasContainer");
+  container.innerHTML = "";
+
+  const width = container.clientWidth || 400;
+  const height = container.clientHeight || 205;
+
+  mainScene = new THREE.Scene();
+
+  mainCamera = new THREE.PerspectiveCamera(
+    35,width/height,.1,100
+  );
+
+  mainCamera.position.set(0,-.12,5.1);
+
+  mainRenderer = new THREE.WebGLRenderer({
+    alpha:true,
+    antialias:true
+  });
+
+  mainRenderer.setSize(width,height);
+  mainRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  mainRenderer.outputEncoding = THREE.sRGBEncoding;
+  mainRenderer.setClearColor(0x000000,0);
+
+  container.appendChild(mainRenderer.domElement);
+  addLights(mainScene);
+
+  activeMesh = buildCharacter(currentCharKey);
+  activeMesh.scale.setScalar(.87);
+  activeMesh.position.y = -.18;
+  mainScene.add(activeMesh);
+
+  const wrapper = document.getElementById("stageWrapper");
+
+  wrapper.onpointerdown = e => {
+    dragging = true;
+    lastX = e.clientX;
+    wrapper.setPointerCapture(e.pointerId);
+  };
+
+  wrapper.onpointermove = e => {
+    if(!dragging) return;
+    targetRotY += (e.clientX-lastX)*.009;
+    lastX = e.clientX;
+  };
+
+  wrapper.onpointerup = () => dragging = false;
+  wrapper.onpointercancel = () => dragging = false;
+
+  function animate() {
+    animFrameId = requestAnimationFrame(animate);
+
+    if(!activeMesh) return;
+
+    const t = Date.now()*.002;
+
+    activeMesh.rotation.y +=
+      (targetRotY-activeMesh.rotation.y)*.08;
+
+    activeMesh.userData.head.rotation.x +=
+      (targetRotX-activeMesh.userData.head.rotation.x)*.08;
+
+    activeMesh.position.y =
+      -.18+(thinking ? Math.abs(Math.sin(t*2.5))*.08 : Math.sin(t)*.025);
+
+    if(activeMesh.userData.tail) {
+      activeMesh.userData.tail.rotation.z =
+        Math.sin(t*2)*.12-.5;
+    }
+
+    mainRenderer.render(mainScene,mainCamera);
+  }
+
+  animate();
+}
+
+/* ==========================================
+   6. 캐릭터 선택 및 대화 복원
+========================================== */
+
+function selectCharacter(key) {
+  currentCharKey = key;
+  currentChar = characters[key];
+
+  document.getElementById("selectScreen").style.display = "none";
+  document.getElementById("chatScreen").style.display = "flex";
+
+  document.getElementById("headerName").textContent = currentChar.name;
+  document.getElementById("headerRole").textContent = currentChar.role;
+  document.getElementById("topBar").style.background = currentChar.color;
+  document.getElementById("sendBtn").style.background = currentChar.color;
+  document.getElementById("stageWrapper").style.background = currentChar.bg;
+
+  targetRotY = 0;
+  targetRotX = 0;
+  lastTopic = null;
+
+  setTimeout(initStage,60);
+
+  restoreChat();
+  restoreMood();
+}
+
+function restoreChat() {
+  const chatBox = document.getElementById("chatBox");
+  chatBox.innerHTML = "";
+
+  const history = getHistory();
+
+  if(history.length===0) {
+    showReply(currentChar.greeting,"첫 인사",false);
+    return;
+  }
+
+  history.forEach(item => {
+    if(item.sender==="user") {
+      appendUserMessage(item.message,false);
+    } else if(item.sender==="bot") {
+      appendBotMessage(item.message,item.tag,false,item.danger||false);
+    } else if(item.sender==="system") {
+      appendSystemMessage(item.message,false);
+    }
+  });
+}
+
+/* ==========================================
+   7. 문맥 인식 대화 엔진
+========================================== */
+
+const topics = {
+  study: {
+    words:["시험","성적","공부","진로","대학","모의고사","숙제","학원","점수"],
+    replies:[
+      "시험이나 공부 때문에 마음이 복잡하구나. 어떤 부분이 가장 걱정돼?",
+      "잘하고 싶은 마음이 클수록 부담도 커질 수 있어. 지금 가장 신경 쓰이는 건 뭐야?",
+      "공부와 진로는 생각할수록 고민이 많아지지. 어떤 일이 있었는지 이야기해 줄래?"
+    ],
+    follow:"아까 공부 이야기를 했었지. 그중에서도 가장 신경 쓰이는 부분이 뭐야?"
+  },
+
+  friend: {
+    words:["친구","따돌림","단톡","싸웠","외톨이","관계","손절","왕따","서운"],
+    replies:[
+      "친구 관계에서 마음이 상했구나. 무슨 일이 있었는지 천천히 이야기해 줄래?",
+      "가까운 사람에게 서운한 일이 생기면 생각보다 오래 마음에 남지. 어떤 점이 가장 속상했어?",
+      "그 상황에서 네 기분이 어땠는지 궁금해. 조금 더 들려줄래?"
+    ],
+    follow:"아까 친구 이야기를 했었는데, 그 일은 어떻게 되었어?"
+  },
+
+  family: {
+    words:["부모님","엄마","아빠","가족","잔소리","동생","언니","오빠"],
+    replies:[
+      "가족과의 일은 가까운 사이인 만큼 더 복잡하게 느껴질 수 있어. 무슨 일이 있었어?",
+      "집에서도 마음이 편하지 않았다면 답답했겠다. 어떤 상황이었는지 이야기해 줄래?"
+    ],
+    follow:"아까 가족 이야기를 했었지. 지금은 마음이 조금 괜찮아졌어?"
+  },
+
+  tired: {
+    words:["피곤","졸려","지쳐","힘들","우울","스트레스","짜증","불안","외로워"],
+    replies:[
+      "요즘 마음이 많이 지쳐 있는 것 같아. 특별히 힘든 일이 있었어?",
+      "그런 기분이 드는구나. 지금은 위로가 필요한지, 함께 해결 방법을 찾아보고 싶은지 궁금해.",
+      "혼자 생각하다 보면 더 복잡해질 수 있지. 천천히 이야기해도 괜찮아."
+    ],
+    follow:"아까 힘들다고 했는데, 지금은 기분이 조금 달라졌어?"
+  }
+};
+
+function choose(list) {
+  return list[Math.floor(Math.random()*list.length)];
+}
+
+function getResponse(text) {
+  const clean = text.trim();
+  const normalized = clean.replace(/[!?.,~…\s]/g,"").toLowerCase();
+
+  // 안전 관련 표현 우선 확인
+  const dangerWords = [
+    "죽고싶","자살하고싶","살기싫",
+    "자해하고싶","나를해치고싶"
+  ];
+
+  if(dangerWords.some(word => normalized.includes(word))) {
+    lastTopic = "safety";
+
+    return {
+      tag:"안전 지원 안내",
+      danger:true,
+      reply:"이야기해 줘서 고마워. 지금 혼자 감당하기 어려울 만큼 힘든 상황인 것 같아. 네 안전이 가장 중요해. 지금 바로 믿을 수 있는 보호자나 선생님에게 알려 줘. 가능하면 혼자 있지 말고 가까운 어른과 함께 있어 줘. 당장 위험하다면 112 또는 119에 연락하고, 청소년상담1388에서도 도움을 받을 수 있어."
+    };
+  }
+
+  // 정확한 인사 처리
+  if(/^(안녕|안녕하세요|안뇽|하이|헬로|반가워|좋은아침)$/i.test(normalized)) {
+    return {
+      tag:"일상 인사",
+      reply:currentChar.smallTalk.hi
+    };
+  }
+
+  // 감사
+  if(/^(고마워|감사해|감사합니다|땡큐)$/i.test(normalized)) {
+    return {
+      tag:"감사 인사",
+      reply:currentChar.smallTalk.thanks
+    };
+  }
+
+  // 안부
+  if(/^(오늘어땠어|뭐해|잘지냈어|잘있었어)$/i.test(normalized)) {
+    const answers = {
+      haru:"나? 오늘은 네가 올까 기다리고 있었지 ㅋㅋ 너는 오늘 어땠어?",
+      teacher:"저는 잘 지냈어요. 찾아와 줘서 반가워요. 오늘은 어떤 하루였나요?",
+      bambi:"멍! 밤비는 오늘도 신나게 기다리고 있었어! 너는 오늘 뭐 했어?",
+      luna:"나는 조용히 시간을 보내고 있었어. 너는 오늘 어떤 하루였어냥?"
+    };
+
+    return {tag:"일상 대화",reply:answers[currentCharKey]};
+  }
+
+  // 심심함
+  if(/심심|놀자|지루해|할 게 없/.test(clean)) {
+    return {tag:"일상 대화",reply:currentChar.smallTalk.bored};
+  }
+
+  // 이전 주제 이어가기
+  if(lastTopic && /^(응|어|맞아|그래|그런데|근데|그래서|왜|몰라|그게)[.!? ]*$/.test(clean)) {
+    return {
+      tag:"이전 대화 연결",
+      reply:topics[lastTopic]?.follow || "응, 계속 이야기해 줘. 천천히 들어볼게."
+    };
+  }
+
+  // 주제 분류
+  for(const [type,data] of Object.entries(topics)) {
+    if(data.words.some(word=>clean.includes(word))) {
+      lastTopic = type;
+      return {
+        tag:"고민 공감",
+        reply:choose(data.replies)
+      };
+    }
+  }
+
+  // 긍정적인 감정
+  if(/좋아|행복|기뻐|신나|즐거워/.test(clean)) {
+    return {
+      tag:"감정 공감",
+      reply:"오, 좋은 일이 있었나 보다! 무슨 일이 있었는지 더 들려줘!"
+    };
+  }
+
+  // 부정적인 감정
+  if(/싫어|화나|짜증나|속상/.test(clean)) {
+    return {
+      tag:"감정 공감",
+      reply:"마음이 불편했겠구나. 어떤 일 때문에 그런 기분이 들었어?"
+    };
+  }
+
+  return {
+    tag:"대화 이어가기",
+    reply:choose([
+      "그랬구나. 그 이야기를 조금 더 들려줄래?",
+      "네가 그렇게 생각한 이유가 궁금해. 어떤 일이 있었어?",
+      "음, 그렇구나. 그때 어떤 기분이 들었어?",
+      "이야기해 줘서 고마워. 조금 더 자세히 말해 줘도 좋아."
+    ])
+  };
+}
+
+/* ==========================================
+   8. 캐릭터 말투
+========================================== */
+
+function applyStyle(message) {
+  if(currentChar.style==="dog" && !message.includes("멍")) {
+    return message+" 🐾";
+  }
+
+  if(currentChar.style==="cat" && !message.includes("냥")) {
+    return message+"냥.";
+  }
+
+  return message;
+}
+
+/* ==========================================
+   9. 메시지 표시
+========================================== */
+
+function appendUserMessage(text,save=true) {
+  const box = document.getElementById("chatBox");
+  const row = document.createElement("div");
+  row.className = "msg-row user-row";
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble user-bubble";
+  bubble.style.background = currentChar.color;
+  bubble.textContent = text;
+
+  row.appendChild(bubble);
+  box.appendChild(row);
+
+  if(save) saveMessage("user",text);
+
+  box.scrollTop = box.scrollHeight;
+}
+
+function appendBotMessage(text,tag,danger=false,save=true) {
+  const box = document.getElementById("chatBox");
+  const row = document.createElement("div");
+  row.className = "msg-row bot-row";
+
+  const label = document.createElement("span");
+  label.className = "sender-label";
+  label.textContent = currentChar.name;
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble bot-bubble"+(danger?" danger-bubble":"");
+
+  const tagElement = document.createElement("span");
+  tagElement.className = "tag";
+  tagElement.textContent = tag;
+
+  const content = document.createElement("div");
+  content.textContent = text;
+
+  bubble.append(tagElement,document.createElement("br"),content);
+  row.append(label,bubble);
+  box.appendChild(row);
+
+  if(save) {
+    getHistory().push({
+      sender:"bot",
+      message:text,
+      tag,
+      danger,
+      time:new Date().toISOString()
+    });
+    saveData("maeumon_chats",chatHistories);
+  }
+
+  box.scrollTop = box.scrollHeight;
+}
+
+function appendSystemMessage(text,save=true) {
+  const box = document.getElementById("chatBox");
+  const row = document.createElement("div");
+
+  row.style.textAlign = "center";
+  row.style.fontSize = "11px";
+  row.style.color = "#64748b";
+  row.style.padding = "5px";
+  row.textContent = text;
+
+  box.appendChild(row);
+
+  if(save) saveMessage("system",text);
+
+  box.scrollTop = box.scrollHeight;
+}
+
+/* ==========================================
+   10. 답변 및 입력
+========================================== */
+
+function showReply(text,tag,danger=false) {
   appendBotMessage(text,tag,danger);
-  isTyping=false;
-  btn.disabled=false;
-  document.getElementById("userInput").focus();
- },delay);
 }
-function sendMessage(){
- if(isTyping)return;
- const input=document.getElementById("userInput");
- const text=input.value.trim();
- if(!text)return;
- appendUserMessage(text);
- input.value="";
- const result=getResponse(text);
- showTypingAndReply(applyStyle(result.reply),result.tag,result.danger||false);
+
+function showTypingAndReply(text,tag,danger=false) {
+  isTyping = true;
+  thinking = true;
+
+  const btn = document.getElementById("sendBtn");
+  const status = document.getElementById("statusPill");
+  const box = document.getElementById("chatBox");
+
+  btn.disabled = true;
+  status.textContent = currentChar.name+"가 답장 작성 중...";
+  status.style.color = currentChar.color;
+
+  const row = document.createElement("div");
+  row.className = "msg-row bot-row";
+  row.id = "typingIndicator";
+
+  const label = document.createElement("span");
+  label.className = "sender-label";
+  label.textContent = currentChar.name;
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble bot-bubble typing-dots";
+
+  for(let i=0;i<3;i++) {
+    const dot = document.createElement("div");
+    dot.className = "dot";
+    bubble.appendChild(dot);
+  }
+
+  row.append(label,bubble);
+  box.appendChild(row);
+  box.scrollTop = box.scrollHeight;
+
+  const delay = Math.min(1300,Math.max(450,text.length*9));
+
+  setTimeout(() => {
+    row.remove();
+
+    thinking = false;
+    status.textContent = "● 이야기 듣는 중";
+    status.style.color = "#334155";
+
+    appendBotMessage(text,tag,danger);
+
+    isTyping = false;
+    btn.disabled = false;
+    document.getElementById("userInput").focus();
+  },delay);
 }
+
+function sendMessage() {
+  if(isTyping) return;
+
+  const input = document.getElementById("userInput");
+  const text = input.value.trim();
+
+  if(!text) return;
+
+  appendUserMessage(text);
+  input.value = "";
+
+  const result = getResponse(text);
+  const reply = result.danger ? result.reply : applyStyle(result.reply);
+
+  showTypingAndReply(
+    reply,
+    result.tag,
+    result.danger || false
+  );
+}
+
 document.getElementById("userInput").addEventListener("keydown",e=>{
- if(e.key==="Enter"){e.preventDefault();sendMessage()}
+  if(e.key==="Enter") sendMessage();
 });
 
-/* 대화 요약 */
-function showSummary(){
- const history=getHistory();
- const userMessages=history.filter(item=>item.sender==="user").map(item=>item.message);
- const mood=moodHistories[todayKey()];
- let summary="";
- if(userMessages.length===0){
-  summary="아직 나눈 대화가 없어. 오늘 있었던 일을 이야기해 봐!";
- }else{
-  summary+="오늘 "+currentChar.name+"와 나눈 대화는 총 "+userMessages.length+"개의 메시지야.\n\n";
-  summary+="📌 나눈 이야기\n";
-  userMessages.slice(-8).forEach((msg,index)=>summary+=(index+1)+". "+msg+"\n");
-  summary+="\n💭 오늘의 기분\n";
-  summary+=mood?mood.emoji+" "+mood.mood:"아직 기분을 기록하지 않았어.";
-  summary+="\n\n오늘 나눈 이야기를 바탕으로 스스로의 마음을 천천히 돌아봐도 좋아.";
- }
- document.getElementById("summaryText").textContent=summary;
- document.getElementById("summaryModal").style.display="flex";
+/* ==========================================
+   11. 대화 요약
+========================================== */
+
+function showSummary() {
+  const history = getHistory();
+
+  const userMessages = history
+    .filter(item=>item.sender==="user")
+    .map(item=>item.message);
+
+  const mood = moodHistories[todayKey()];
+  let summary = "";
+
+  if(userMessages.length===0) {
+    summary = "아직 나눈 대화가 없어. 오늘 있었던 일을 이야기해 봐!";
+  } else {
+    summary += "오늘 "+currentChar.name+"와 나눈 대화는 총 "+
+      userMessages.length+"개의 메시지야.\n\n";
+
+    summary += "📌 나눈 이야기\n";
+
+    userMessages.slice(-8).forEach((msg,index)=>{
+      summary += (index+1)+". "+msg+"\n";
+    });
+
+    summary += "\n💭 오늘의 기분\n";
+
+    summary += mood
+      ? mood.emoji+" "+mood.mood
+      : "아직 기분을 기록하지 않았어.";
+
+    summary += "\n\n오늘 나눈 이야기를 바탕으로 스스로의 마음을 천천히 돌아봐도 좋아.";
+  }
+
+  document.getElementById("summaryText").textContent = summary;
+  document.getElementById("summaryModal").style.display = "flex";
 }
-function clearHistory(){
- if(!confirm("이 캐릭터와의 대화 기록을 모두 삭제할까요?"))return;
- chatHistories[currentCharKey]=[];
- saveData("maeumon_chats",chatHistories);
- lastTopic=null;
- document.getElementById("chatBox").innerHTML="";
- showReply(currentChar.greeting,"새로운 대화");
+
+/* ==========================================
+   12. 초기화 및 화면 관리
+========================================== */
+
+function clearHistory() {
+  if(!confirm("이 캐릭터와의 대화 기록을 모두 삭제할까요?")) return;
+
+  chatHistories[currentCharKey] = [];
+  saveData("maeumon_chats",chatHistories);
+
+  lastTopic = null;
+  document.getElementById("chatBox").innerHTML = "";
+
+  showReply(currentChar.greeting,"새로운 대화");
 }
-function goBack(){
- if(isTyping)return;
- if(animFrameId)cancelAnimationFrame(animFrameId);
- activeMesh=null;
- mainRenderer=null;
- document.getElementById("chatScreen").style.display="none";
- document.getElementById("selectScreen").style.display="block";
- currentChar=null;
- currentCharKey=null;
+
+function goBack() {
+  if(isTyping) return;
+
+  if(animFrameId) cancelAnimationFrame(animFrameId);
+
+  activeMesh = null;
+
+  if(mainRenderer) {
+    mainRenderer.dispose();
+    mainRenderer = null;
+  }
+
+  document.getElementById("chatScreen").style.display = "none";
+  document.getElementById("selectScreen").style.display = "block";
+
+  currentChar = null;
+  currentCharKey = null;
 }
-function closeModal(id){document.getElementById(id).style.display="none"}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+/* ==========================================
+   13. 시작
+========================================== */
 
 window.addEventListener("load",()=>{
- if(!window.THREE){
-  alert("3D 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.");
-  return;
- }
- setupPreview();
- if(!localStorage.getItem("maeumon_privacy")){
-  document.getElementById("privacyModal").style.display="flex";
-  localStorage.setItem("maeumon_privacy","yes");
- }
+  if(typeof THREE === "undefined") {
+    alert("3D 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.");
+    return;
+  }
+
+  setupPreview();
+
+  const privacyShown = localStorage.getItem("maeumon_privacy");
+
+  if(!privacyShown) {
+    document.getElementById("privacyModal").style.display = "flex";
+    localStorage.setItem("maeumon_privacy","yes");
+  }
 });
+
 window.addEventListener("resize",()=>{
- if(!mainRenderer||!mainCamera)return;
- const container=document.getElementById("threeCanvasContainer");
- if(!container.clientWidth)return;
- mainCamera.aspect=container.clientWidth/container.clientHeight;
- mainCamera.updateProjectionMatrix();
- mainRenderer.setSize(container.clientWidth,container.clientHeight);
+  if(mainRenderer && mainCamera) {
+    const container = document.getElementById("threeCanvasContainer");
+
+    if(container.clientWidth && container.clientHeight) {
+      mainCamera.aspect = container.clientWidth/container.clientHeight;
+      mainCamera.updateProjectionMatrix();
+
+      mainRenderer.setSize(
+        container.clientWidth,
+        container.clientHeight
+      );
+    }
+  }
+
+  previewRenderers.forEach(item=>{
+    const container = document.getElementById("preview-"+item.type);
+    item.renderer.setSize(container.clientWidth,container.clientHeight);
+    item.camera.aspect = container.clientWidth/container.clientHeight;
+    item.camera.updateProjectionMatrix();
+  });
 });
 </script>
+
 </body>
 </html>
