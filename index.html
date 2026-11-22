@@ -45,7 +45,7 @@
       display: flex; justify-content: center; align-items: flex-end;
     }
     .card-avatar-box svg {
-      width: 116px; height: 116px;
+      width: 118px; height: 118px;
       animation: floatIdle 3.2s ease-in-out infinite;
     }
     .card-badge {
@@ -84,7 +84,7 @@
       perspective: 700px;
     }
     .character-actor {
-      width: 195px; height: 195px;
+      width: 200px; height: 200px;
       transition: transform 0.15s ease-out;
       transform-style: preserve-3d;
       animation: floatIdle 3.2s ease-in-out infinite;
@@ -251,8 +251,8 @@
               <stop offset="100%" stop-color="#1E130E"/>
             </radialGradient>
             <radialGradient id="hairT" cx="40%" cy="30%" r="70%">
-              <stop offset="0%" stop-color="#9C745B"/>
-              <stop offset="100%" stop-color="#694A38"/>
+              <stop offset="0%" stop-color="#8C6249"/>
+              <stop offset="100%" stop-color="#593B2A"/>
             </radialGradient>
             <linearGradient id="vestT" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stop-color="#2B4C9B"/>
@@ -264,9 +264,10 @@
             </linearGradient>
           </defs>
 
-          <!-- 긴 웨이브 뒷머리 -->
-          <path d="M 155 110 C 195 115, 205 165, 185 195 C 175 210, 145 205, 140 185 Z" fill="url(#hairT)"/>
-          <circle cx="176" cy="175" r="24" fill="url(#hairT)"/>
+          <!-- 풍성한 갈색 뒷머리 & 웨이브 -->
+          <path d="M 62 95 C 48 135, 52 180, 74 195 L 172 195 C 198 180, 202 125, 178 90 Z" fill="url(#hairT)"/>
+          <circle cx="176" cy="166" r="24" fill="url(#hairT)"/>
+          <circle cx="66" cy="166" r="20" fill="url(#hairT)"/>
 
           <!-- 몸통 (흰 셔츠 + 네이비 베스트) -->
           <rect x="74" y="158" width="92" height="82" rx="38" fill="#FFFFFF"/>
@@ -290,8 +291,9 @@
           <!-- 얼굴형 -->
           <rect x="66" y="48" width="108" height="106" rx="52" fill="url(#skinT)"/>
 
-          <!-- 구레나룻 -->
-          <path d="M 164 78 Q 174 88 168 102 Q 160 95 162 82 Z" fill="url(#hairT)"/>
+          <!-- 자연스러운 가르마 앞머리 & 옆머리 -->
+          <path d="M 66 96 C 64 62, 95 48, 126 52 C 108 62, 86 72, 74 98 Z" fill="url(#hairT)"/>
+          <path d="M 174 98 C 176 62, 145 48, 118 52 C 138 62, 156 72, 166 98 Z" fill="url(#hairT)"/>
 
           <!-- 볼터치 -->
           <ellipse cx="88" cy="116" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
@@ -301,7 +303,7 @@
           <path d="M 94 84 Q 103 80 110 84" stroke="#4A3228" stroke-width="3.5" stroke-linecap="round" fill="none"/>
           <path d="M 130 84 Q 137 80 146 84" stroke="#4A3228" stroke-width="3.5" stroke-linecap="round" fill="none"/>
 
-          <!-- 눈 (흰자 + 검은 눈동자) -->
+          <!-- 눈 -->
           <g class="eye-group">
             <circle cx="104" cy="102" r="11.5" fill="#FFFFFF"/>
             <circle class="pupil" cx="106" cy="100" r="6.8" fill="#1E1B18"/>
@@ -321,8 +323,8 @@
           <ellipse cx="120" cy="126" rx="8.5" ry="4.5" fill="#D96B66"/>
 
           <!-- 다크브라운 베레모 -->
-          <path d="M 54 68 C 52 34, 105 24, 148 34 C 182 42, 188 72, 174 84 C 150 68, 86 68, 54 68 Z" fill="url(#beretGrad)"/>
-          <rect x="116" y="21" width="8" height="10" rx="4" fill="#2A1B14" transform="rotate(8 120 26)"/>
+          <path d="M 54 64 C 52 30, 105 20, 148 30 C 182 38, 188 68, 174 80 C 150 64, 86 64, 54 64 Z" fill="url(#beretGrad)"/>
+          <rect x="116" y="17" width="8" height="10" rx="4" fill="#2A1B14" transform="rotate(8 120 22)"/>
 
           <!-- 초록 다이어리 & 책갈피 & 오른손 -->
           <g transform="rotate(-12 145 195)">
@@ -349,7 +351,14 @@
               <stop offset="0%" stop-color="#38BDF8"/>
               <stop offset="100%" stop-color="#0369A1"/>
             </radialGradient>
+            <linearGradient id="hairH" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#4A3B38"/>
+              <stop offset="100%" stop-color="#29201E"/>
+            </linearGradient>
           </defs>
+
+          <!-- 목덜미 숏컷 뒷머리 -->
+          <rect x="64" y="88" width="112" height="62" rx="28" fill="url(#hairH)"/>
 
           <!-- 후드티 몸통 -->
           <rect x="72" y="158" width="96" height="82" rx="40" fill="url(#hoodieH)"/>
@@ -370,32 +379,35 @@
           <!-- 얼굴형 -->
           <rect x="66" y="48" width="108" height="106" rx="52" fill="url(#skinH)"/>
 
+          <!-- 풍성하고 단정한 앞머리 & 옆머리 -->
+          <path d="M 65 98 C 65 56, 175 56, 175 98 C 170 84, 162 76, 154 74 L 146 86 L 135 72 L 122 88 L 108 72 L 94 86 L 84 74 C 76 78, 70 86, 65 98 Z" fill="url(#hairH)"/>
+
           <!-- 볼터치 -->
           <ellipse cx="88" cy="116" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
           <ellipse cx="152" cy="116" rx="12" ry="7" fill="#FF8A80" opacity="0.38"/>
 
           <!-- 눈썹 -->
-          <path d="M 93 84 Q 102 79 110 84" stroke="#3B2F2F" stroke-width="3.8" stroke-linecap="round" fill="none"/>
-          <path d="M 130 84 Q 138 79 147 84" stroke="#3B2F2F" stroke-width="3.8" stroke-linecap="round" fill="none"/>
+          <path d="M 93 88 Q 102 84 110 88" stroke="#3B2F2F" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <path d="M 130 88 Q 138 84 147 88" stroke="#3B2F2F" stroke-width="3.5" stroke-linecap="round" fill="none"/>
 
           <!-- 눈 -->
           <g class="eye-group">
-            <circle cx="103" cy="102" r="11.5" fill="#FFFFFF"/>
-            <circle class="pupil" cx="104" cy="101" r="7" fill="#1E1B18"/>
-            <circle cx="106" cy="98" r="2.4" fill="#FFFFFF"/>
+            <circle cx="103" cy="104" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="104" cy="103" r="7" fill="#1E1B18"/>
+            <circle cx="106" cy="100" r="2.4" fill="#FFFFFF"/>
 
-            <circle cx="137" cy="102" r="11.5" fill="#FFFFFF"/>
-            <circle class="pupil" cx="136" cy="101" r="7" fill="#1E1B18"/>
-            <circle cx="138" cy="98" r="2.4" fill="#FFFFFF"/>
+            <circle cx="137" cy="104" r="11.5" fill="#FFFFFF"/>
+            <circle class="pupil" cx="136" cy="103" r="7" fill="#1E1B18"/>
+            <circle cx="138" cy="100" r="2.4" fill="#FFFFFF"/>
           </g>
 
           <!-- 해맑은 입 -->
-          <path d="M 111 123 Q 120 133 129 123 Z" fill="#F43F5E"/>
+          <path d="M 111 124 Q 120 134 129 124 Z" fill="#F43F5E"/>
 
-          <!-- 앞머리 & 스카이블루 볼캡 -->
-          <path d="M 76 66 Q 92 80 104 66 Q 118 82 132 66 Q 146 80 164 66 Z" fill="#3B2F2F"/>
-          <path d="M 66 68 C 66 32, 174 32, 174 68 Z" fill="url(#capH)"/>
-          <path d="M 64 66 Q 120 56 176 66 Q 145 78 95 78 Z" fill="#F8FAFC"/>
+          <!-- 스카이블루 볼캡 (앞머리 위로 씌운 형태) -->
+          <path d="M 66 64 C 66 26, 174 26, 174 64 Z" fill="url(#capH)"/>
+          <circle cx="120" cy="31" r="5" fill="#0284C7"/>
+          <path d="M 64 62 Q 120 50 176 62 Q 145 73 95 73 Z" fill="#F8FAFC"/>
         </svg>
       `,
       bambi: `
@@ -414,17 +426,24 @@
 
           <!-- 몸통 & 크림색 배 -->
           <rect x="76" y="156" width="88" height="84" rx="40" fill="url(#furB)"/>
-          <ellipse cx="120" cy="198" rx="28" ry="34" fill="#FFFBEB"/>
+          <ellipse cx="120" cy="202" rx="28" ry="32" fill="#FFFBEB"/>
 
           <!-- 오렌지 반다나 스카프 -->
           <path d="M 82 158 Q 120 172 158 158 L 154 170 Q 120 184 86 170 Z" fill="#F97316"/>
           <polygon points="108,168 132,168 120,188" fill="#EA580C"/>
 
-          <!-- 앞발 -->
-          <ellipse cx="88" cy="194" rx="13" ry="16" fill="#FFFBEB"/>
-          <ellipse cx="152" cy="194" rx="13" ry="16" fill="#FFFBEB"/>
+          <!-- 앙증맞게 모은 강아지 앞발 -->
+          <g>
+            <rect x="86" y="186" width="24" height="32" rx="12" fill="#FFFBEB" stroke="#FDE68A" stroke-width="2"/>
+            <line x1="94" y1="208" x2="94" y2="217" stroke="#D97706" stroke-width="2" stroke-linecap="round"/>
+            <line x1="102" y1="208" x2="102" y2="217" stroke="#D97706" stroke-width="2" stroke-linecap="round"/>
 
-          <!-- 강아지 귀 (자연스럽게 양옆으로 처진 귀) -->
+            <rect x="130" y="186" width="24" height="32" rx="12" fill="#FFFBEB" stroke="#FDE68A" stroke-width="2"/>
+            <line x1="138" y1="208" x2="138" y2="217" stroke="#D97706" stroke-width="2" stroke-linecap="round"/>
+            <line x1="146" y1="208" x2="146" y2="217" stroke="#D97706" stroke-width="2" stroke-linecap="round"/>
+          </g>
+
+          <!-- 강아지 귀 -->
           <ellipse cx="62" cy="104" rx="18" ry="34" fill="url(#earB)" transform="rotate(16 62 104)"/>
           <ellipse cx="178" cy="104" rx="18" ry="34" fill="url(#earB)" transform="rotate(-16 178 104)"/>
 
@@ -468,16 +487,23 @@
 
           <!-- 몸통 & 흰 가슴털 -->
           <rect x="78" y="156" width="84" height="84" rx="38" fill="url(#furL)"/>
-          <ellipse cx="120" cy="198" rx="26" ry="34" fill="#FAF5FF"/>
+          <ellipse cx="120" cy="202" rx="26" ry="32" fill="#FAF5FF"/>
 
           <!-- 핑크 초커 & 골드 방울 -->
           <path d="M 84 158 Q 120 170 156 158 L 154 167 Q 120 179 86 167 Z" fill="#F472B6"/>
           <circle cx="120" cy="173" r="8" fill="#FACC15"/>
           <circle cx="120" cy="174" r="2" fill="#92400E"/>
 
-          <!-- 앞발 -->
-          <ellipse cx="90" cy="194" rx="12" ry="15" fill="#FAF5FF"/>
-          <ellipse cx="150" cy="194" rx="12" ry="15" fill="#FAF5FF"/>
+          <!-- 앙증맞게 모은 고양이 앞발 -->
+          <g>
+            <rect x="88" y="186" width="22" height="32" rx="11" fill="#FAF5FF" stroke="#E9D5FF" stroke-width="2"/>
+            <line x1="95" y1="208" x2="95" y2="217" stroke="#A855F7" stroke-width="2" stroke-linecap="round"/>
+            <line x1="103" y1="208" x2="103" y2="217" stroke="#A855F7" stroke-width="2" stroke-linecap="round"/>
+
+            <rect x="130" y="186" width="22" height="32" rx="11" fill="#FAF5FF" stroke="#E9D5FF" stroke-width="2"/>
+            <line x1="137" y1="208" x2="137" y2="217" stroke="#A855F7" stroke-width="2" stroke-linecap="round"/>
+            <line x1="145" y1="208" x2="145" y2="217" stroke="#A855F7" stroke-width="2" stroke-linecap="round"/>
+          </g>
 
           <!-- 고양이 귀 -->
           <polygon points="70,84 68,34 106,58" fill="#C084FC"/>
